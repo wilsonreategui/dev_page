@@ -15,6 +15,12 @@ html {
   scroll-padding-top: 24px;
 }
 
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
 body {
   margin: 0;
   min-width: 320px;
@@ -48,6 +54,10 @@ a {
   --panel-border: #aaa0a3;
   --shadow-soft: 4px 4px 0 var(--accent);
   --shadow-small: 2px 2px 0 var(--accent);
+  /* Misma geometría que la suave, pero en el gris de la página: es la sombra de lo que
+     vive dentro del panel, que ya trae la suya en accent. Al apuntar a var(--border)
+     el token vale para los dos temas sin redefinirse abajo. */
+  --shadow-neutral: 4px 4px 0 var(--border);
   /* Las flechas de la barra van como data URI, que no acepta var(): el color queda
      horneado, así que se redefinen por tema más abajo. */
   --scroll-arrow-up: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M6 3.4 10.4 8.6H1.6Z' fill='%23c93657'/%3E%3C/svg%3E");
@@ -656,12 +666,12 @@ a {
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
-  /* Altura única: los 369px que mide skills con sus 9 arcos a separación natural.
+  /* Altura única: los 381px que mide skills con sus 9 arcos a separación natural.
      Es a la vez mínimo y máximo, así que las tres pestañas rellenan ese alto y
      ninguna se estira de más. Si algo no cabe, el panel tiene su scroll.
      El número es medido: incluye el padding del panel y el de skills, así que si se
      toca cualquiera de esos hay que recalcularlo soltando la altura del panel. */
-  height: 369px;
+  height: 381px;
   min-height: 0;
   /* El padding derecho es menor porque la barra aporta su propio aire: la suma
      con el canal de 24px deja el mismo ancho de contenido que antes. */
@@ -759,7 +769,7 @@ a {
   width: 580px;
   /* padding y no margin: al rellenar el panel, el margen se comería alto del propio
      bloque y las filas tendrían menos sitio para repartirse. */
-  padding-top: 20px;
+  padding-block: 16px;
   margin: 0 auto;
 }
 
@@ -846,8 +856,13 @@ a {
 .projects {
   display: grid;
   gap: 26px;
+  /* start y no el stretch por defecto: la rejilla rellena el panel, pero sus filas se
+     quedan en el alto del contenido. Si no, la tarjeta se estiraba hasta el borde
+     inferior y el marco quedaba con aire de sobra dentro. El hueco libre se acumula
+     debajo de la última tarjeta. */
+  align-content: start;
   width: 100%;
-  padding-top: 20px;
+  padding-block: 10px 24px;
   margin: 0 auto;
 }
 
@@ -859,7 +874,7 @@ a {
   border: 2px solid var(--border);
   border-radius: 10px;
   background: var(--page-bg);
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--shadow-neutral);
 }
 
 .project-card.horizontal {
@@ -1322,6 +1337,38 @@ a {
 @keyframes caret-blink {
   50% {
     opacity: 0;
+  }
+}
+
+/* En una ventana de escritorio con altura suficiente, toda la composición cabe
+   en el viewport: header y footer permanecen visibles y solo el panel activo
+   administra el contenido que se desborda. En ventanas más bajas se conserva el
+   flujo normal de la página para no recortar la cabecera ni el footer. */
+@media (min-width: 761px) and (min-height: 700px) {
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .site {
+    height: 100vh;
+    height: 100svh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Encoger sí, estirar no: con flex-grow el workspace se comería el hueco libre y
+     empujaría el footer al borde inferior de la ventana, dejando un vacío tras el
+     panel. Así el footer va pegado al contenido y el sobrante queda al final. El
+     shrink se conserva para que en ventanas justas el panel ceda alto en vez de
+     recortar la cabecera o el footer. */
+  .tab-workspace,
+  .tabs-card,
+  .tab-panel {
+    flex: 0 1 auto;
+    min-height: 0;
   }
 }
 
