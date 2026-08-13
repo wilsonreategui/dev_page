@@ -400,48 +400,76 @@ a {
 .social-links {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 9px 16px;
+  /* baseline y no center: el "#" en flujo y las cajas de los chips se alinean solos
+     por su línea base, sin ningún desplazamiento calculado. */
+  align-items: baseline;
+  gap: 7px;
 }
 
-/* Mismo tratamiento para el <button> de copiar y para los <a> externos, así la fila
-   se lee homogénea aunque uno no navegue. */
+/* Sin desplazamiento: la posición la resuelve sola la alineación por línea base. */
+.social-links__prompt {
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* El correo y las redes comparten un botón compacto y sin volumen para que la
+   fila completa entre en el ancho del footer. */
 .social-links__item {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 0;
-  border: 0;
+  gap: 5px;
+  /* Sin min-height: el alto lo fija el icono, con 4px de aire parejo alrededor. */
+  padding: 4px 6px;
+  /* Mismo borde y radio que el toggle de tema, para que compartan familia visual. */
+  border: 1px solid var(--nav-text);
+  border-radius: 3px;
   color: inherit;
-  background: transparent;
+  background: var(--page-bg);
   font-family: inherit;
-  font-size: 10px;
+  font-size: 9px;
   line-height: 1;
   text-decoration: none;
   cursor: pointer;
-  transition: color 150ms ease;
+  transition: color 140ms ease, border-color 140ms ease, background-color 140ms ease,
+    transform 140ms ease;
 }
 
 .social-links__item:hover,
 .social-links__item:focus-visible {
   color: var(--accent);
+  border-color: var(--accent);
+  transform: translateY(-1px);
 }
 
-.social-links img {
+.social-links__item:active {
+  transform: translateY(0);
+}
+
+/* El asset va de máscara: background-color manda el color, así hereda currentColor
+   y se tiñe en el hover. El ancho lo pone el inline style, proporcional al icono. */
+.social-links__icon {
   display: block;
-  height: 20px;
-  width: auto;
-  max-width: 25px;
+  height: 11px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--icon-mask);
+  mask-image: var(--icon-mask);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
   transition: transform 160ms ease;
 }
 
 .social-links__instagram {
   display: block;
-  width: 20px;
-  height: 20px;
+  width: 11px;
+  height: 11px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.8;
+  transition: transform 160ms ease;
 }
 
 .social-links__instagram-dot {
@@ -449,9 +477,11 @@ a {
   stroke: none;
 }
 
-.social-links__item:hover img,
-.social-links__item:focus-visible img {
-  transform: scale(1.08);
+.social-links__item:hover .social-links__icon,
+.social-links__item:focus-visible .social-links__icon,
+.social-links__item:hover .social-links__instagram,
+.social-links__item:focus-visible .social-links__instagram {
+  transform: scale(1.12);
 }
 
 .content-column,
@@ -626,16 +656,16 @@ a {
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
-  /* Regla: pantalla > pestaña más alta. Toma los 460px que mide skills, la de más
-     contenido, salvo que la ventana no dé — ahí cede y aparece el scroll interno.
-     Los 554px son lo que ocupa todo lo demás (cabecera, pestañas y footer), medido
-     y estable de 760px de ancho en adelante. Ojo: el 460 incluye el padding de
-     arriba y abajo, así que si se toca ese padding hay que volver a medirlo. */
-  height: clamp(240px, calc(100svh - 554px), 460px);
+  /* Altura única: los 369px que mide skills con sus 9 arcos a separación natural.
+     Es a la vez mínimo y máximo, así que las tres pestañas rellenan ese alto y
+     ninguna se estira de más. Si algo no cabe, el panel tiene su scroll.
+     El número es medido: incluye el padding del panel y el de skills, así que si se
+     toca cualquiera de esos hay que recalcularlo soltando la altura del panel. */
+  height: 369px;
   min-height: 0;
   /* El padding derecho es menor porque la barra aporta su propio aire: la suma
      con el canal de 24px deja el mismo ancho de contenido que antes. */
-  padding: 30px 8px 26px 17px;
+  padding: 30px 8px 20px 17px;
   border: 1px solid var(--panel-border);
   border-radius: 0 12px 12px 12px;
   background: transparent;
@@ -657,11 +687,23 @@ a {
   }
 }
 
-.tab-panel > .skills,
-.tab-panel > .projects,
+/* Las tres pestañas rellenan el panel en vez de quedar centradas o pegadas arriba:
+   así arrancan todas en el mismo punto y el sobrante se reparte dentro. Si el
+   contenido no cabe, el panel ya tiene su scroll. */
+.tab-panel > .skills {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-block: 0;
+}
+
+.tab-panel > .projects {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .tab-panel > .contact-panel {
-  flex: 0 0 auto;
-  margin-block: auto;
+  flex: 1 1 auto;
+  margin-block: 0;
 }
 
 .tab-panel::-webkit-scrollbar {
@@ -709,11 +751,16 @@ a {
 .skills {
   display: flex;
   flex-wrap: wrap;
-  align-content: flex-start;
+  /* space-between y no flex-start: las filas se reparten el alto disponible en vez
+     de amontonarse arriba dejando el hueco abajo. */
+  align-content: space-between;
   justify-content: space-evenly;
   row-gap: 18px;
   width: 580px;
-  margin: 25px auto 0;
+  /* padding y no margin: al rellenar el panel, el margen se comería alto del propio
+     bloque y las filas tendrían menos sitio para repartirse. */
+  padding-top: 20px;
+  margin: 0 auto;
 }
 
 .skills__row {
@@ -800,7 +847,8 @@ a {
   display: grid;
   gap: 26px;
   width: 100%;
-  margin: 28px auto 0;
+  padding-top: 20px;
+  margin: 0 auto;
 }
 
 .project-card {
@@ -973,22 +1021,110 @@ a {
   padding: 22px 29px;
 }
 
-/* pre-line respeta los \n del texto pero sigue colapsando espacios y permitiendo
-   que las líneas largas envuelvan solas. */
+/* Un tercio arriba para el enunciado, dos tercios para el formulario. */
+.contact-panel {
+  display: grid;
+  grid-template-rows: 1fr 2fr;
+  min-height: 0;
+}
+
 .contact-intro {
-  margin: 29px 0 0 2px;
+  display: flex;
+  flex-direction: column;
+  /* stretch y no flex-start: cada línea debe ocupar el ancho completo, o el globo no
+     tendría espacio libre por el que derivar. */
+  align-items: stretch;
+  justify-content: center;
+  gap: 10px;
+  min-height: 0;
+  margin: 0 0 0 2px;
+  /* Separa el enunciado del formulario, justo en el corte del tercio. */
+  border-bottom: 1px solid var(--panel-border);
   font-size: 14px;
   line-height: 1.45;
-  white-space: pre-line;
   text-align: left;
 }
 
+.contact-intro__line {
+  margin: 0;
+}
+
+.contact-bubble {
+  display: inline-block;
+  position: relative;
+  animation: bubble-drift 16s ease-in-out infinite;
+}
+
+/* Distinta duración y desfase para que los dos no se muevan en bloque. */
+.contact-intro__line:nth-child(2) .contact-bubble {
+  animation-duration: 20s;
+  animation-delay: -7s;
+}
+
+.contact-bubble__body {
+  display: inline-block;
+  padding: 7px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  background: var(--page-bg);
+  transition: transform 260ms var(--control-ease), border-color 200ms ease;
+}
+
+.contact-bubble:hover .contact-bubble__body,
+.contact-intro__line:focus-within .contact-bubble__body {
+  transform: translateY(-5px) rotate(-1.2deg);
+  border-color: var(--accent);
+}
+
+/* El recorrido horizontal cubre todo el espacio libre sin conocer los anchos: "left"
+   mide el contenedor y el translateX negativo mide el globo, así que left 100% con
+   translateX -100% deja su borde derecho contra el borde derecho de la línea. El
+   bamboleo vertical y el giro viajan en el mismo transform. */
+@keyframes bubble-drift {
+  0%,
+  100% {
+    left: 0;
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  25% {
+    left: 50%;
+    transform: translate3d(-50%, -5px, 0) rotate(0.9deg);
+  }
+
+  50% {
+    left: 100%;
+    transform: translate3d(-100%, -8px, 0) rotate(0deg);
+  }
+
+  75% {
+    left: 50%;
+    transform: translate3d(-50%, -4px, 0) rotate(-0.9deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-bubble {
+    animation: none;
+  }
+
+  .contact-bubble__body {
+    transition: none;
+  }
+}
+
+/* La fila del mensaje es la elástica: absorbe todo el sobrante cuando hay sitio y
+   cede hasta 44px cuando falta. Ese piso fija el mínimo del grid completo en 158px,
+   que es lo que decide hasta qué ventana entra el formulario sin desbordar. */
 .contact-form {
   display: grid;
+  flex: 1;
   grid-template-columns: repeat(2, 1fr);
-  gap: 11px 40px;
+  grid-template-rows: auto minmax(44px, 1fr) auto auto;
+  gap: 10px 40px;
   width: 580px;
-  margin: 29px auto 0;
+  min-height: 0;
+  margin: 14px auto 0;
 }
 
 .contact-form label {
@@ -1005,18 +1141,21 @@ a {
   outline: none;
   color: var(--text);
   background: transparent;
-  box-shadow: var(--shadow-small);
+  box-shadow: none;
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .contact-form input {
-  height: 30px;
-  padding: 4px 10px;
+  height: 26px;
+  padding: 3px 10px;
 }
 
+/* Sin min-height propio: el piso lo pone la fila del grid, o competirían y este
+   forzaría el desborde. */
 .contact-form textarea {
-  min-height: 100px;
-  padding: 10px;
+  height: 100%;
+  min-height: 0;
+  padding: 8px 10px;
   resize: vertical;
 }
 
@@ -1028,33 +1167,61 @@ a {
 
 .contact-form__message {
   grid-column: 1 / -1;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
+/* Ocupa la fila completa; el alto se mantiene fijo para que el sobrante siga yendo
+   entero a la caja del mensaje. */
 .contact-form button {
-  grid-column: 2;
-  justify-self: end;
-  width: 110px;
-  height: 30px;
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  height: 24px;
+  padding: 0 14px;
   border: 0;
-  border-radius: 10px;
-  color: #ffffff;
+  border-radius: 3px;
+  color: var(--page-bg);
   background: var(--accent);
-  font-size: 14px;
-  font-weight: 700;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
   cursor: pointer;
-  box-shadow: var(--shadow-small);
-  transition: transform 160ms ease, box-shadow 160ms ease;
+  box-shadow: none;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+
+.contact-form__send-icon {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  transition: transform 200ms var(--control-ease);
+}
+
+.contact-form button:hover .contact-form__send-icon,
+.contact-form button:focus-visible .contact-form__send-icon {
+  transform: translateX(2px);
 }
 
 .contact-form button:hover,
 .contact-form button:focus-visible {
   transform: translateY(-1px);
-  box-shadow: 3px 3px 0 var(--accent);
+  opacity: 0.86;
 }
 
+/* Sin min-height: vacía colapsa a 0 y el botón queda al fondo. Al aparecer el aviso
+   los 16px salen del textarea, que es la fila elástica, no del alto del panel. */
 .form-status {
   grid-column: 1 / -1;
-  min-height: 1.45em;
+  min-height: 0;
   margin: -2px 0 0;
   color: var(--accent);
   font-size: 11px;
@@ -1066,8 +1233,9 @@ a {
      alinean su contenido en la misma columna, como el prompt del saludo. */
   --prompt-gutter: 16px;
   flex: 0 0 auto;
-  padding-top: 18px;
+  padding-top: 28px;
   padding-bottom: 16px;
+  font-family: 'JetBrains Mono', Consolas, 'Courier New', monospace;
   text-align: left;
 }
 
@@ -1083,22 +1251,85 @@ a {
   position: absolute;
   top: 50%;
   left: 0;
+  /* 14px, el mismo tamaño con el que el "#" aparece en los párrafos del hero. */
   font-family: 'JetBrains Mono', Consolas, 'Courier New', monospace;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1;
   transform: translateY(-50%);
 }
 
 .farewell {
   /* Misma tipografía y color que los párrafos del hero: hereda la mono y --text. */
-  margin: 0 0 10px;
+  /* El aire con la fila de chips lo pone esta línea, no el nav. Va por encima de los
+     14px de abajo porque los chips son cajas sin interlínea: el hueco visible que
+     resulta es ~4px menor que el número declarado. */
+  margin: 14px 0 0;
+  /* Esta línea trae su propio "#" en el texto, así que no lleva canalón ni
+     pseudo-elemento: quedarían dos. Al ir el "#" en el flujo, cae en la misma
+     columna que el del nav y el texto arranca a 16.8px, contra sus 16px. */
+  padding-left: 0;
   font-size: 14px;
   line-height: 1.45;
 }
 
+.farewell::before {
+  content: none;
+}
+
+/* Trae su propio ">" en el texto, igual que la despedida: sin canalón ni pseudo. */
+.footer-exit {
+  margin: 14px 0 0;
+  padding-left: 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.footer-exit::before {
+  content: none;
+}
+
+/* Esta fila lleva su "#" en flujo, como las otras dos: ni pseudo-elemento ni
+   canalón, o habría dos y con la sangría de más. */
+.footer .social-links {
+  padding-left: 0;
+}
+
+.footer .social-links::before {
+  content: none;
+}
+
 .footer .social-links {
   justify-content: flex-start;
+  /* Sin margen inferior propio: la separación con la línea siguiente ya la aporta
+     el margen superior de la despedida. */
   margin: 0;
+}
+
+/* Cursor de consola: barra fina que parpadea sin transición, como un caret real.
+   Conserva su 1em de alto y baja 2px bajo la línea base: los descendentes llegan a
+   3px, así que deja 1px de aire por debajo sin encogerlo. -0.143em = 2/14. */
+.terminal-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 0.1em;
+  vertical-align: -0.143em;
+  /* Accent en vez de currentColor: es el único color de la paleta que no es gris. */
+  background: var(--accent);
+  animation: caret-blink 1.1s step-end infinite;
+}
+
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* El parpadeo constante es justo lo que molesta con reduced motion: queda fijo. */
+@media (prefers-reduced-motion: reduce) {
+  .terminal-caret {
+    animation: none;
+  }
 }
 
 :focus-visible {
@@ -1306,6 +1537,7 @@ a {
 
   .contact-form {
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto minmax(100px, 1fr) auto auto;
   }
 
   .contact-form__message,

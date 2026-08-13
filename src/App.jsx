@@ -65,17 +65,17 @@ const copy = {
     specialtyHighlight: 'diseño, desarrollo y gestión de software',
     specialtyAfter: ', utilizando tecnologías modernas y minimalistas, siguiendo buenas prácticas de desarrollo para crear proyectos eficientes y escalables.',
     tabs: { skills: 'skills', projects: 'proyectos', contact: 'contacto' },
-    contactBefore: ' Si te gusta  mi trabajo,  ',
+    contactBefore: 'Si te gusta mi trabajo, ',
     contactHighlight: 'escríbeme.',
-    // El salto va en el dato, no en el JSX, para que cada idioma decida si lo usa.
-    contactAfter: '\nPodemos colaborar en un proyecto.',
+    contactAfter: 'Podemos colaborar en un proyecto.',
     name: 'nombre:',
     email: 'email:',
     message: 'mensaje:',
     send: 'enviar',
     status: '¡gracias! tu mensaje está listo para ser enviado.',
     socialText: 'también puedes encontrarme por estos medios:',
-    farewell: 'nos vemos pronto!',
+    // Acá el "#" va en el texto: el css solo lo inyecta en la fila de links.
+    farewell: '> nos vemos pronto!',
     socialLabel: 'redes sociales',
     copyEmail: 'copiar correo',
     copied: 'copiado!',
@@ -92,7 +92,7 @@ const copy = {
     introduction: '> my name is',
     introBefore: '# a ',
     introHighlight: 'senior developer',
-    introAfter: ' based in Lima, Peru.',
+    introAfter: ' based in Lima, Perú.',
     workBefore: '# i currently work as a systems analyst at ',
     workHighlight: 'Total Servicios Financieros',
     workAfter: ', a company focused on financial products such as leasing and factoring.',
@@ -100,16 +100,16 @@ const copy = {
     specialtyHighlight: 'software design, development, and management',
     specialtyAfter: ', using modern, minimal technologies and development best practices to create efficient, scalable projects.',
     tabs: { skills: 'skills', projects: 'projects', contact: 'contact' },
-    contactBefore: 'if you like my work and would like to get in touch, feel free to ',
-    contactHighlight: 'send me a message',
-    contactAfter: ' to collaborate on a project.',
+    contactBefore: 'if you like my work, ',
+    contactHighlight: 'send me a message.',
+    contactAfter: 'We can collaborate on a project.',
     name: 'name:',
     email: 'email:',
     message: 'message:',
     send: 'send',
     status: 'thank you! your message is ready to be sent.',
     socialText: 'you can also find me here:',
-    farewell: 'see you soon!',
+    farewell: '# see you soon!',
     socialLabel: 'social networks',
     copyEmail: 'copy email',
     copied: 'copied!',
@@ -206,9 +206,21 @@ function SocialLinks({ theme, labels }) {
 
   return (
     <nav className="social-links" aria-label={labels.socialLabel}>
+      {/* En flujo y no como ::before: así se alinea por línea base con los chips
+          sin depender de un top calculado a mano. */}
+      <span className="social-links__prompt" aria-hidden="true">#</span>
       {socialNetworks.map((network) => {
+        // Como máscara y no como <img>: el asset aporta la silueta y el color sale de
+        // currentColor, así el icono se tiñe en el hover igual que el texto.
         const icon = network.asset ? (
-          <img src={assetPath(network.asset, theme)} alt="" width={network.width} height="20" />
+          <span
+            className="social-links__icon"
+            style={{
+              '--icon-mask': `url("${assetPath(network.asset, theme)}")`,
+              width: `${((network.width * 11) / 20).toFixed(2)}px`,
+            }}
+            aria-hidden="true"
+          />
         ) : (
           <InstagramIcon />
         )
@@ -528,14 +540,34 @@ function App() {
 
             {activeTab === 'contact' && (
               <div className="contact-panel">
-                <p className="contact-intro">
-                  {labels.contactBefore}<strong>{labels.contactHighlight}</strong>{labels.contactAfter}
-                </p>
+                <div className="contact-intro">
+                  {/* Dos capas por globo: la de fuera flota en bucle y la de dentro
+                      reacciona al hover. Con una sola, la animación se queda con el
+                      transform y el hover no se vería. */}
+                  <p className="contact-intro__line">
+                    <span className="contact-bubble">
+                      <span className="contact-bubble__body">
+                        {labels.contactBefore}<strong>{labels.contactHighlight}</strong>
+                      </span>
+                    </span>
+                  </p>
+                  <p className="contact-intro__line">
+                    <span className="contact-bubble">
+                      <span className="contact-bubble__body">{labels.contactAfter}</span>
+                    </span>
+                  </p>
+                </div>
                 <form className="contact-form" onSubmit={handleSubmit}>
                   <label>{labels.name}<input name="name" type="text" autoComplete="name" required /></label>
                   <label>{labels.email}<input name="email" type="email" autoComplete="email" required /></label>
                   <label className="contact-form__message">{labels.message}<textarea name="message" rows="5" required /></label>
-                  <button type="submit">{labels.send}</button>
+                  <button type="submit">
+                    <span>{labels.send}</span>
+                    <svg className="contact-form__send-icon" viewBox="0 0 18 18" aria-hidden="true">
+                      <path d="M2.2 9 15.8 3.2 10.6 15.4 8.1 10.6 2.2 9Z" />
+                      <path d="M8.1 10.6 15.8 3.2" />
+                    </svg>
+                  </button>
                   <p className="form-status" aria-live="polite">{formStatus}</p>
                 </form>
               </div>
@@ -545,8 +577,14 @@ function App() {
       </main>
 
       <footer className="page-shell footer content-column">
-        <p className="farewell">{labels.farewell}</p>
         <SocialLinks theme={theme} labels={labels} />
+        <p className="farewell">{labels.farewell}</p>
+        <p className="footer-exit">
+          {/* Como string de JS: un ">" suelto en el texto de JSX dispara
+              react/no-unescaped-entities. */}
+          {'> exit'}
+          <span className="terminal-caret" aria-hidden="true" />
+        </p>
       </footer>
     </div>
   )
