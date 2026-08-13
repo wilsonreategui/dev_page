@@ -1,0 +1,1328 @@
+:root {
+  font-family: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+  color: #171717;
+  background: #ffffff;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-padding-top: 24px;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: inherit;
+}
+
+.site {
+  --page-bg: #ffffff;
+  --text: #171717;
+  --nav-text: #3a3a3a;
+  --accent: #c93657;
+  --border: #c8c8c8;
+  --media: #171717;
+  --media-inverse: #ffffff;
+  --panel-border: #aaa0a3;
+  --shadow-soft: 4px 4px 0 var(--accent);
+  --shadow-small: 2px 2px 0 var(--accent);
+  /* Las flechas de la barra van como data URI, que no acepta var(): el color queda
+     horneado, así que se redefinen por tema más abajo. */
+  --scroll-arrow-up: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M6 3.4 10.4 8.6H1.6Z' fill='%23c93657'/%3E%3C/svg%3E");
+  --scroll-arrow-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M6 8.6 1.6 3.4h8.8Z' fill='%23c93657'/%3E%3C/svg%3E");
+  --control-ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --control-transition: transform 160ms var(--control-ease), box-shadow 160ms var(--control-ease),
+    border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+  display: flex;
+  flex-direction: column;
+  /* Sin altura fija: el panel ya define su tamaño y el footer va detrás. El min-height
+     solo garantiza que el fondo cubra la ventana. */
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow-x: hidden;
+  color: var(--text);
+  background: var(--page-bg);
+  transition: color 180ms ease, background-color 180ms ease;
+}
+
+.site[data-theme='dark'] {
+  --page-bg: #171717;
+  --text: #ffffff;
+  --nav-text: #c8c8c8;
+  --border: #c8c8c8;
+  --media: #ffffff;
+  --media-inverse: #171717;
+  --accent: #e45b78;
+  --panel-border: #a99fa2;
+  --scroll-arrow-up: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M6 3.4 10.4 8.6H1.6Z' fill='%23e45b78'/%3E%3C/svg%3E");
+  --scroll-arrow-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M6 8.6 1.6 3.4h8.8Z' fill='%23e45b78'/%3E%3C/svg%3E");
+  --shadow-soft: 4px 4px 0 var(--accent);
+  --shadow-small: 2px 2px 0 var(--accent);
+}
+
+.page-shell {
+  width: min(calc(100% - 32px), 836px);
+  margin-inline: auto;
+}
+
+.site-header {
+  --control-size: 36px;
+  --control-gap: 6px;
+  --lang-width: 68px;
+  --hero-columns-width: calc(94px + 12px + 623px);
+  /* La botonera es absoluta, así que el padding del header no la arrastra: ambos
+     leen esta variable para bajar juntos. */
+  --header-top: 48px;
+  position: relative;
+  flex: 0 0 auto;
+  padding-top: var(--header-top);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.theme-toggle {
+  --toggle-size: var(--control-size);
+  position: relative;
+  width: var(--toggle-size);
+  height: var(--toggle-size);
+  flex: 0 0 var(--toggle-size);
+  padding: 0;
+  border: 1px solid var(--nav-text);
+  border-radius: 3px;
+  color: var(--page-bg);
+  background: var(--text);
+  cursor: pointer;
+  transition: var(--control-transition);
+}
+
+.theme-toggle img {
+  transition: transform 320ms var(--control-ease);
+}
+
+.theme-toggle:hover img,
+.theme-toggle:focus-visible img {
+  transform: rotate(180deg);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  outline-offset: 2px;
+}
+
+/* Ambas piezas escalan desde el border box (de ahí el -1px del borde) y con el
+   mismo factor --toggle-size / 40, que es como calzaban en el diseño original. */
+.theme-toggle__ring {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: var(--toggle-size);
+  height: var(--toggle-size);
+}
+
+.theme-toggle__icon {
+  position: absolute;
+  top: calc(var(--toggle-size) * 0.15 - 1px);
+  left: calc(var(--toggle-size) * 0.25 - 1px);
+  width: calc(var(--toggle-size) * 0.6);
+  height: calc(var(--toggle-size) * 0.7);
+  /* El semicírculo no está centrado en su viewBox de 24x28: su centro cae en
+     (10, 14). Sin esto, el giro de 180deg lo desplazaría fuera del ring. */
+  transform-origin: 41.667% 50%;
+}
+
+.site[data-theme='light'] .theme-toggle img {
+  filter: invert(1);
+}
+
+.language-select {
+  position: relative;
+  display: block;
+  width: var(--lang-width);
+}
+
+.language-select__trigger {
+  display: flex;
+  width: 100%;
+  height: var(--control-size);
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 8px;
+  border: 1px solid var(--nav-text);
+  border-radius: 999px;
+  color: var(--nav-text);
+  background: var(--page-bg);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition: var(--control-transition);
+}
+
+.language-select__chevron {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 9px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  transition: transform 200ms var(--control-ease);
+}
+
+.language-select__trigger[aria-expanded='true'] .language-select__chevron {
+  transform: rotate(180deg);
+}
+
+.lang-flag {
+  display: block;
+  width: 15px;
+  height: 10px;
+  flex: 0 0 15px;
+  border-radius: 1px;
+}
+
+.language-select__list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 3;
+  min-width: 100%;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid var(--nav-text);
+  border-radius: 9px;
+  background: var(--page-bg);
+  list-style: none;
+}
+
+.language-select__option {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--nav-text);
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 140ms ease, background-color 140ms ease;
+}
+
+.language-select__option[aria-selected='true'] {
+  color: var(--accent);
+}
+
+.language-select__option:hover,
+.language-select__option:focus-visible {
+  color: var(--page-bg);
+  background: var(--accent);
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible,
+.language-select__trigger:hover,
+.language-select__trigger:focus-visible,
+.art-link:hover,
+.art-link:focus-visible {
+  border-color: var(--accent);
+  color: var(--page-bg);
+  background: var(--accent);
+  transform: translateY(-2px);
+}
+
+.theme-toggle:active,
+.language-select__trigger:active,
+.art-link:active {
+  transform: translateY(0);
+}
+
+.profile-controls {
+  position: absolute;
+  top: var(--header-top);
+  right: max(0px, 100% - var(--hero-columns-width));
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--control-gap);
+}
+
+.art-link {
+  display: grid;
+  width: var(--control-size);
+  height: var(--control-size);
+  flex: 0 0 var(--control-size);
+  place-items: center;
+  border: 1px solid var(--nav-text);
+  border-radius: 3px;
+  color: var(--accent);
+  background: var(--page-bg);
+  text-decoration: none;
+  transition: var(--control-transition);
+}
+
+.art-link svg {
+  width: calc(var(--control-size) * 0.61);
+  height: calc(var(--control-size) * 0.61);
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+
+.art-link__arrow {
+  transition: transform 260ms var(--control-ease);
+}
+
+.art-link:hover .art-link__arrow,
+.art-link:focus-visible .art-link__arrow {
+  transform: translate(1.5px, -1.5px);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 94px minmax(0, 623px);
+  gap: 12px;
+  align-items: start;
+  margin-top: 0;
+}
+
+.hero__profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Sale hacia afuera de la columna: el texto está clavado al borde del panel de
+     abajo, así que la única forma de darle aire a la foto es correrla a la izquierda. */
+  justify-self: start;
+  margin-left: -20px;
+}
+
+.hero__avatar {
+  width: 94px;
+  height: 94px;
+  filter: drop-shadow(2px 2px 0 var(--accent));
+}
+
+.hero__content {
+  padding-top: 40px;
+}
+
+.hero-title {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.15;
+}
+
+.hero-title > span {
+  display: block;
+}
+
+.hero-title__greeting {
+  margin-bottom: 12px;
+}
+
+.hero-title__identity {
+  white-space: nowrap;
+}
+
+.hero-title__name {
+  display: inline;
+  color: var(--accent);
+  font-family: 'Tourney', sans-serif;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.hero p {
+  max-width: 623px;
+  margin: 15px 0 0 3px;
+  font-size: 14px;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.hero p + p {
+  margin-top: 19px;
+}
+
+.hero strong,
+.contact-intro strong {
+  color: inherit;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.hero__content p strong {
+  font-style: italic;
+}
+
+.social-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px 16px;
+}
+
+/* Mismo tratamiento para el <button> de copiar y para los <a> externos, así la fila
+   se lee homogénea aunque uno no navegue. */
+.social-links__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font-family: inherit;
+  font-size: 10px;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.social-links__item:hover,
+.social-links__item:focus-visible {
+  color: var(--accent);
+}
+
+.social-links img {
+  display: block;
+  height: 20px;
+  width: auto;
+  max-width: 25px;
+  transition: transform 160ms ease;
+}
+
+.social-links__instagram {
+  display: block;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+
+.social-links__instagram-dot {
+  fill: currentColor;
+  stroke: none;
+}
+
+.social-links__item:hover img,
+.social-links__item:focus-visible img {
+  transform: scale(1.08);
+}
+
+.content-column,
+.footer.content-column {
+  width: min(calc(100% - 32px), 623px);
+  margin-left: calc(50% - 313px);
+}
+
+.tab-workspace {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  min-height: 0;
+  padding-top: 27px;
+}
+
+.tabs-card {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.tabs {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-end;
+  gap: 30px;
+  padding: 0;
+}
+
+.tab-button {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 0;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 3px 3px 0 0;
+  color: var(--text);
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.58;
+  /* padding y margin quedan fuera a propósito: animarlos hace layout en cada frame y,
+     con el clip-path del ::before, Chrome deja restos sin invalidar en las esquinas.
+     El paso de 1px es instantáneo, que además es más discreto. */
+  transition: color 120ms ease, opacity 120ms ease, border-color 120ms ease, box-shadow 120ms ease,
+    transform 120ms ease;
+}
+
+.tab-button__icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  transition: transform 150ms ease;
+}
+
+.tab-button::after {
+  content: none;
+}
+
+.tab-button:hover,
+.tab-button:focus-visible {
+  opacity: 1;
+}
+
+.tab-button:focus-visible {
+  outline: none;
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 4px;
+}
+
+.tab-button[aria-selected='true']:focus-visible {
+  text-decoration: none;
+}
+
+.tab-button[aria-selected='true'] {
+  z-index: 3;
+  margin-bottom: -3px;
+  border-color: var(--panel-border);
+  border-bottom: 0;
+  color: var(--accent);
+  background: var(--page-bg);
+  box-shadow: none;
+  opacity: 1;
+  transform: translate(-2px, -2px);
+}
+
+.tab-button[aria-selected='true']::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -1px -1px 0;
+  border-radius: inherit;
+  box-shadow: 4px 4px 0 var(--accent);
+  /* Recorta 1px, el grosor de la línea del panel, para que la sombra muera donde la
+     línea empieza y ésta cruce entera por delante. */
+  clip-path: inset(-8px -8px 1px -8px);
+  pointer-events: none;
+}
+
+.tab-button:hover,
+.tab-button:focus-visible,
+.tab-button[aria-selected='true']:hover,
+.tab-button[aria-selected='true']:focus-visible {
+  border-color: var(--accent);
+  color: #ffffff;
+  background: var(--accent);
+  box-shadow: 5px 0 0 var(--text);
+  font-weight: 700;
+  text-decoration: none;
+  text-shadow: none;
+  -webkit-text-stroke: 0.35px currentColor;
+  transform: translate(-2px, 0);
+}
+
+.tab-button:hover .tab-button__icon,
+.tab-button:focus-visible .tab-button__icon {
+  transform: rotate(-6deg) scale(1.08);
+}
+
+.tab-button[aria-selected='true']:hover,
+.tab-button[aria-selected='true']:focus-visible {
+  margin-bottom: -3px;
+  border-bottom: 0;
+  box-shadow: none;
+  transform: translate(-2px, -2px);
+}
+
+.tab-button[aria-selected='true']:hover::before,
+.tab-button[aria-selected='true']:focus-visible::before {
+  box-shadow: 6px 4px 0 var(--text);
+}
+
+.tabs-card[data-active-tab='skills'] .tab-button[aria-selected='true'],
+.tabs-card[data-active-tab='skills'] .tab-button[aria-selected='true']:hover,
+.tabs-card[data-active-tab='skills'] .tab-button[aria-selected='true']:focus-visible {
+  transform: translate(0, -2px);
+}
+
+/* La primera pestaña no puede correrse a la izquierda como las demás: ahí se sale
+   del panel. Crece hacia arriba en su lugar. El margin-top negativo compensa el
+   padding extra, así el margin box sigue midiendo lo mismo y .tabs no se estira,
+   con lo cual el borde inferior queda clavado contra el panel. */
+.tabs .tab-button:first-child:hover,
+.tabs .tab-button:first-child:focus-visible {
+  margin-top: -1px;
+  padding-top: 8px;
+  transform: translateX(0);
+}
+
+.tab-panel {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  /* Regla: pantalla > pestaña más alta. Toma los 460px que mide skills, la de más
+     contenido, salvo que la ventana no dé — ahí cede y aparece el scroll interno.
+     Los 554px son lo que ocupa todo lo demás (cabecera, pestañas y footer), medido
+     y estable de 760px de ancho en adelante. Ojo: el 460 incluye el padding de
+     arriba y abajo, así que si se toca ese padding hay que volver a medirlo. */
+  height: clamp(240px, calc(100svh - 554px), 460px);
+  min-height: 0;
+  /* El padding derecho es menor porque la barra aporta su propio aire: la suma
+     con el canal de 24px deja el mismo ancho de contenido que antes. */
+  padding: 30px 8px 26px 17px;
+  border: 1px solid var(--panel-border);
+  border-radius: 0 12px 12px 12px;
+  background: transparent;
+  box-shadow: var(--shadow-soft);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  outline: none;
+}
+
+/* Firefox no entiende ::-webkit-scrollbar, así que ahí van las propiedades estándar.
+   En Chrome hay que omitirlas: si se declaran, ignora los pseudo-elementos y dibuja
+   su barra nativa con flechas, pegada al borde. */
+@supports not selector(::-webkit-scrollbar) {
+  .tab-panel {
+    scrollbar-color: var(--accent) transparent;
+    scrollbar-width: thin;
+  }
+}
+
+.tab-panel > .skills,
+.tab-panel > .projects,
+.tab-panel > .contact-panel {
+  flex: 0 0 auto;
+  margin-block: auto;
+}
+
+.tab-panel::-webkit-scrollbar {
+  width: 24px;
+}
+
+/* El margen acorta el riel, que es lo único que separa al pulgar de las flechas. */
+.tab-panel::-webkit-scrollbar-track {
+  margin-block: 6px;
+  background: transparent;
+}
+
+/* El borde transparente + background-clip deja el pulgar en 8px centrado en el canal
+   de 24px, o sea 8px de aire a cada lado. De ahí el efecto flotante. */
+.tab-panel::-webkit-scrollbar-thumb {
+  border: 8px solid transparent;
+  border-radius: 999px;
+  background-color: var(--accent);
+  background-clip: content-box;
+}
+
+/* Al tomar control con ::-webkit-scrollbar los botones desaparecen si no se dibujan. */
+.tab-panel::-webkit-scrollbar-button {
+  display: block;
+  height: 16px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 9px 9px;
+}
+
+.tab-panel::-webkit-scrollbar-button:vertical:start:decrement {
+  background-image: var(--scroll-arrow-up);
+}
+
+.tab-panel::-webkit-scrollbar-button:vertical:end:increment {
+  background-image: var(--scroll-arrow-down);
+}
+
+/* Chrome reserva también el par invertido en cada extremo; sin esto salen huecos. */
+.tab-panel::-webkit-scrollbar-button:vertical:start:increment,
+.tab-panel::-webkit-scrollbar-button:vertical:end:decrement {
+  display: none;
+}
+
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  justify-content: space-evenly;
+  row-gap: 18px;
+  width: 580px;
+  margin: 25px auto 0;
+}
+
+.skills__row {
+  display: contents;
+}
+
+.skill-item {
+  --skill-x: 0px;
+  --skill-y: -7px;
+  --skill-rotate: 0deg;
+  --skill-scale: 1.03;
+  --arc-x: 0px;
+  --arc-y: 0px;
+  --arc-rotate: 0deg;
+  --arc-scale: 1.03;
+  --arc-skew: 0deg;
+  position: relative;
+  width: 154px;
+  height: 87px;
+  text-align: center;
+  cursor: default;
+  transform-origin: 50% 72%;
+  transition: transform 260ms cubic-bezier(0.2, 0.85, 0.25, 1.15);
+}
+
+.skill-arc {
+  display: block;
+  width: 130px;
+  height: 65px;
+  margin-inline: auto;
+  fill: none;
+  color: var(--nav-text);
+  stroke: currentColor;
+  /* El viewBox es 100x50, así que el trazo ya adelgaza solo al encoger el arco.
+     Este 3.6 es el pelín extra encima de eso. */
+  stroke-width: 3.6;
+  transform-origin: center bottom;
+  transition: color 180ms ease, transform 280ms cubic-bezier(0.2, 0.85, 0.25, 1.15);
+}
+
+.skill-item span {
+  position: absolute;
+  top: 55px;
+  right: 0;
+  left: 0;
+  padding-inline: 8px;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.skill-item--long span {
+  right: auto;
+  left: 50%;
+  width: 104px;
+  padding-inline: 0;
+  font-size: 9px;
+  transform: translateX(-50%);
+}
+
+.skill-item:hover {
+  z-index: 2;
+  transform: translate(var(--skill-x), var(--skill-y)) rotate(var(--skill-rotate)) scale(var(--skill-scale));
+}
+
+.skill-item:hover .skill-arc {
+  color: var(--accent);
+}
+
+.skill-item--motion-1:hover .skill-arc { transform: translate(var(--arc-x), var(--arc-y)) rotate(var(--arc-rotate)); }
+.skill-item--motion-2:hover .skill-arc { transform: translateX(var(--arc-x)) scaleX(var(--arc-scale)); }
+.skill-item--motion-3:hover .skill-arc { transform: translateY(var(--arc-y)) skewX(var(--arc-skew)); }
+.skill-item--motion-4:hover .skill-arc { transform: rotate(var(--arc-rotate)) scaleY(var(--arc-scale)); }
+.skill-item--motion-5:hover .skill-arc { transform: translate(var(--arc-x), var(--arc-y)) scale(var(--arc-scale)); }
+.skill-item--motion-6:hover .skill-arc { transform: translateX(var(--arc-x)) rotate(var(--arc-rotate)) skewY(var(--arc-skew)); }
+.skill-item--motion-7:hover .skill-arc { transform: translateY(var(--arc-y)) scaleX(var(--arc-scale)) rotate(var(--arc-rotate)); }
+.skill-item--motion-8:hover .skill-arc { transform: translate(var(--arc-x), var(--arc-y)) skewX(var(--arc-skew)); }
+.skill-item--motion-9:hover .skill-arc { transform: rotate(var(--arc-rotate)) scale(var(--arc-scale)); }
+.skill-item--motion-10:hover .skill-arc { transform: translateX(var(--arc-x)) scaleY(var(--arc-scale)); }
+.skill-item--motion-11:hover .skill-arc { transform: translateY(var(--arc-y)) rotate(var(--arc-rotate)) scaleX(var(--arc-scale)); }
+
+/* 100% y no 580px: con 580 se desbordaba 8px de la caja de contenido y el recorte
+   del panel se comía la sombra de las tarjetas. */
+.projects {
+  display: grid;
+  gap: 26px;
+  width: 100%;
+  margin: 28px auto 0;
+}
+
+.project-card {
+  /* Canalón del prompt, fijo en px y no en ch, para que el título, el resumen y los
+     tags alineen su texto en la misma columna pese a tener font-size distinto. */
+  --prompt-gutter: 12px;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--page-bg);
+  box-shadow: var(--shadow-soft);
+}
+
+.project-card.horizontal {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 130px;
+  margin-bottom: 30px;
+}
+
+.project-card.media-right .project-card__media {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.project-card.media-right .project-card__content {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.project-card__media {
+  min-height: 108px;
+  background-color: var(--media);
+}
+
+.project-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.project-card__content {
+  padding: 22px 29px;
+}
+
+/* Media columna es más angosta que el card completo: 29px de padding dejaban muy
+   poco ancho útil al texto. */
+.project-card--solo .project-card__content {
+  padding: 20px 24px;
+}
+
+/* Un tercio para la foto, dos tercios para el texto. */
+.project-card.project-card--solo {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  height: auto;
+  margin-bottom: 0;
+}
+
+/* La captura va entera y pequeña, flotando centrada en su tercio. El fondo cae al
+   del card para que solo se vea el marco, no una caja de color. */
+.project-card--solo .project-card__media {
+  display: grid;
+  min-height: 0;
+  padding: 16px;
+  place-items: center;
+  border-right: 1px solid var(--border);
+  background-color: transparent;
+}
+
+/* width 100% + height auto: la imagen conserva su proporción y se ve completa. */
+.project-card--solo .project-card__media img {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  border: 1px solid var(--border);
+  object-fit: contain;
+}
+
+.project-card h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Inline-block de ancho fijo: alinea por línea base y deja el texto en la columna. */
+.project-card__prompt {
+  display: inline-block;
+  width: var(--prompt-gutter);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.project-card h3 a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.project-card__name {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.project-card__host {
+  margin-left: 7px;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.project-card h3 a:hover,
+.project-card h3 a:focus-visible {
+  color: var(--accent);
+}
+
+/* Acá el prompt sí va absoluto: el párrafo envuelve y las líneas siguientes tienen
+   que caer detrás del ">", no debajo. */
+.project-card__summary {
+  position: relative;
+  margin: 0 0 14px;
+  padding-left: var(--prompt-gutter);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.project-card__summary::before {
+  content: '>';
+  position: absolute;
+  left: 0;
+}
+
+/* El prompt vive en un canalón propio de 2 caracteres, fuera del flujo, para que
+   todos los items arranquen en la misma columna en vez de correrse el primero. */
+.project-card ul {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  column-gap: 30px;
+  row-gap: 8px;
+  margin: 0;
+  padding: 0 0 0 var(--prompt-gutter);
+  list-style: none;
+  font-size: 10px;
+}
+
+.project-card li:first-child {
+  position: relative;
+}
+
+.project-card li:first-child::before {
+  content: '>';
+  position: absolute;
+  left: calc(-1 * var(--prompt-gutter));
+}
+
+.projects__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 40px;
+}
+
+.project-card.vertical {
+  display: grid;
+  grid-template-rows: 110px 110px;
+  height: 220px;
+}
+
+.project-card.vertical .project-card__content {
+  padding: 22px 29px;
+}
+
+/* pre-line respeta los \n del texto pero sigue colapsando espacios y permitiendo
+   que las líneas largas envuelvan solas. */
+.contact-intro {
+  margin: 29px 0 0 2px;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-line;
+  text-align: left;
+}
+
+.contact-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 11px 40px;
+  width: 580px;
+  margin: 29px auto 0;
+}
+
+.contact-form label {
+  display: grid;
+  gap: 7px;
+  font-size: 10px;
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  outline: none;
+  color: var(--text);
+  background: transparent;
+  box-shadow: var(--shadow-small);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.contact-form input {
+  height: 30px;
+  padding: 4px 10px;
+}
+
+.contact-form textarea {
+  min-height: 100px;
+  padding: 10px;
+  resize: vertical;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.contact-form__message {
+  grid-column: 1 / -1;
+}
+
+.contact-form button {
+  grid-column: 2;
+  justify-self: end;
+  width: 110px;
+  height: 30px;
+  border: 0;
+  border-radius: 10px;
+  color: #ffffff;
+  background: var(--accent);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-small);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.contact-form button:hover,
+.contact-form button:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 3px 3px 0 var(--accent);
+}
+
+.form-status {
+  grid-column: 1 / -1;
+  min-height: 1.45em;
+  margin: -2px 0 0;
+  color: var(--accent);
+  font-size: 11px;
+  text-align: right;
+}
+
+.footer {
+  /* Canalón fijo y no en ch: las tres filas tienen tamaños muy distintos y así
+     alinean su contenido en la misma columna, como el prompt del saludo. */
+  --prompt-gutter: 16px;
+  flex: 0 0 auto;
+  padding-top: 18px;
+  padding-bottom: 16px;
+  text-align: left;
+}
+
+.footer > * {
+  position: relative;
+  padding-left: var(--prompt-gutter);
+}
+
+/* Centrado vertical explícito: si no, el "#" se iría al tope de la caja, que en la
+   despedida de 36px queda muy arriba. */
+.footer > *::before {
+  content: '#';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  font-family: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.farewell {
+  /* Misma tipografía y color que los párrafos del hero: hereda la mono y --text. */
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.footer .social-links {
+  justify-content: flex-start;
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+  .page-shell,
+  .content-column,
+  .footer.content-column {
+    width: min(calc(100% - 40px), 580px);
+    margin-inline: auto;
+  }
+
+  .site-header {
+    --header-top: 36px;
+  }
+
+  .hero {
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 16px;
+    margin-top: 0;
+  }
+
+  .hero__profile {
+    margin-left: -8px;
+  }
+
+  .hero__avatar {
+    width: 76px;
+    height: 76px;
+  }
+
+  .hero__content {
+    padding-top: 28px;
+  }
+
+  .hero-title {
+    font-size: clamp(22px, 5vw, 28px);
+    line-height: 1.15;
+  }
+
+  .hero p,
+  .hero p + p {
+    grid-column: 1 / -1;
+  }
+
+  .skills,
+  .projects,
+  .contact-form {
+    width: 100%;
+  }
+
+  .skill-item {
+    width: 128px;
+    height: 73px;
+  }
+
+  .skill-arc {
+    width: 110px;
+    height: 55px;
+  }
+
+  .skill-item span {
+    top: 46px;
+    font-size: 9px;
+  }
+
+  .skill-item--long span {
+    width: 90px;
+  }
+
+  .projects__grid {
+    gap: 20px;
+  }
+
+  .project-card__content,
+  .project-card.vertical .project-card__content {
+    padding: 20px;
+  }
+
+  .project-card ul {
+    column-gap: 18px;
+  }
+
+  .tab-workspace {
+    flex: 0 0 auto;
+  }
+
+  .tabs-card {
+    flex: 0 0 auto;
+  }
+
+  .tab-panel {
+    flex: none;
+    height: clamp(390px, 58svh, 560px);
+  }
+}
+
+@media (max-width: 560px) {
+  .page-shell,
+  .content-column,
+  .footer.content-column {
+    width: min(calc(100% - 32px), 430px);
+  }
+
+  .site-header {
+    padding-top: calc(var(--header-top) + var(--control-size) + 10px);
+  }
+
+  .hero {
+    display: block;
+    text-align: center;
+  }
+
+  .hero__avatar {
+    margin-inline: auto;
+  }
+
+  .hero__profile {
+    width: max-content;
+    margin-inline: auto;
+  }
+
+  .hero__content {
+    padding-top: 18px;
+  }
+
+  .hero-title__name {
+    font-size: clamp(20px, 6vw, 25px);
+  }
+
+  .hero-title__introduction {
+    font-size: clamp(18px, 5.2vw, 22px);
+  }
+
+  .hero p {
+    margin-left: 0;
+  }
+
+  .tab-workspace {
+    padding-top: 42px;
+  }
+
+  .tabs {
+    justify-content: space-between;
+    gap: 4px;
+    padding: 11px 0 0;
+  }
+
+  .tab-button {
+    gap: 5px;
+    padding-inline: 7px;
+    font-size: 12px;
+  }
+
+  .tab-button__icon {
+    width: 15px;
+    height: 15px;
+    flex-basis: 15px;
+  }
+
+  .skill-item {
+    width: 120px;
+  }
+
+  .project-card.horizontal {
+    grid-template-columns: 1fr;
+    grid-template-rows: 140px auto;
+    height: auto;
+  }
+
+  /* A un tercio de 288px la captura quedaba en 34px. Apilada recupera tamaño. */
+  .project-card.project-card--solo {
+    grid-template-columns: 1fr;
+  }
+
+  /* Apilado, la divisoria pasa de vertical a horizontal. */
+  .project-card--solo .project-card__media {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .project-card.media-right .project-card__media,
+  .project-card.media-right .project-card__content {
+    grid-column: 1;
+  }
+
+  .project-card.media-right .project-card__media {
+    grid-row: 1;
+  }
+
+  .project-card.media-right .project-card__content {
+    grid-row: 2;
+  }
+
+  .project-card__content {
+    min-height: 130px;
+  }
+
+  .projects__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-form {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-form__message,
+  .contact-form button,
+  .form-status {
+    grid-column: 1;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
