@@ -1499,7 +1499,7 @@ a {
      gradúa el efecto entero desde acá. No se anima nunca, es una constante.
      Pasando de ~2 las piezas chocan contra el recorte de la tarjeta. */
   .project-card {
-    --shard: 1;
+    --shard: 1.25;
     border-color: var(--panel-border);
     transition: border-color 480ms ease;
   }
@@ -1610,8 +1610,11 @@ a {
 }
 
 /* Los cuatro recorridos de la deriva. Números literales a propósito: ver la nota de
-   arriba. Como el bucle ya no se apaga con el hover, la órbita es chica —poco más de 2px
-   y un cuarto de grado— para que la tarjeta armada respire sin desarmarse. */
+   arriba, y por eso graduar la deriva se hace acá y no desde una variable.
+   La órbita llega a 3px por eje y un tercio de grado —medido, 3.8px de recorrido real—,
+   del orden de las fichas de skills. Como el bucle ya no se apaga con el hover, este
+   número es también cuánto respira la tarjeta ya armada, así que es el que pone el techo:
+   pasando de ~5px de recorrido la tarjeta montada no termina de asentarse. */
 @keyframes card-drift-a {
 
   0%,
@@ -1620,11 +1623,11 @@ a {
   }
 
   33% {
-    transform: translate3d(2px, -1.6px, 0) rotate(0.24deg);
+    transform: translate3d(3px, -2.4px, 0) rotate(0.34deg);
   }
 
   66% {
-    transform: translate3d(-1.2px, 2px, 0) rotate(-0.2deg);
+    transform: translate3d(-1.8px, 3px, 0) rotate(-0.28deg);
   }
 }
 
@@ -1636,11 +1639,11 @@ a {
   }
 
   30% {
-    transform: translate3d(-2.4px, 1.2px, 0) rotate(-0.24deg);
+    transform: translate3d(-3.4px, 1.8px, 0) rotate(-0.34deg);
   }
 
   65% {
-    transform: translate3d(1.6px, -2px, 0) rotate(0.22deg);
+    transform: translate3d(2.4px, -3px, 0) rotate(0.31deg);
   }
 }
 
@@ -1652,11 +1655,11 @@ a {
   }
 
   40% {
-    transform: translate3d(1.6px, 2px, 0) rotate(0.26deg);
+    transform: translate3d(2.4px, 3px, 0) rotate(0.36deg);
   }
 
   75% {
-    transform: translate3d(-2px, -1.2px, 0) rotate(-0.18deg);
+    transform: translate3d(-3px, -1.8px, 0) rotate(-0.26deg);
   }
 }
 
@@ -1668,15 +1671,15 @@ a {
   }
 
   25% {
-    transform: translate3d(-1.6px, -2px, 0) rotate(-0.22deg);
+    transform: translate3d(-2.4px, -3px, 0) rotate(-0.31deg);
   }
 
   55% {
-    transform: translate3d(2px, 0.8px, 0) rotate(0.27deg);
+    transform: translate3d(3px, 1.2px, 0) rotate(0.38deg);
   }
 
   80% {
-    transform: translate3d(0.8px, 2px, 0) rotate(0.12deg);
+    transform: translate3d(1.2px, 3px, 0) rotate(0.17deg);
   }
 }
 
