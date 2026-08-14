@@ -399,57 +399,15 @@ function AudioPreview({ audio, labels }) {
 
 function ProjectCard({ project, language, labels }) {
   const host = project.url ? new URL(project.url).hostname : null
-  const cardRef = useRef(null)
 
-  // Los bucles arrancan con la página y no vuelven a empezar nunca: sin esto, al soltar
-  // la tarjeta cada pieza sigue desde donde quedó —a la media hora de sesión eso es una
-  // fase cualquiera— y el desorden se ve como un reacomodo hacia un sitio distinto en vez
-  // de la misma animación de cuando se abre la pestaña.
-  // currentTime = 0 es el arranque real de cada pieza, retardo negativo incluido, que es
-  // el desfase que las mantiene sin coincidir. Medido: no mete ningún salto, porque en ese
-  // momento --sway —la amplitud de los bucles— está en 0, así que la fase no se ve.
-  const restartDrift = () => {
-    cardRef.current?.getAnimations({ subtree: true }).forEach((animation) => {
-      if (animation.animationName?.startsWith('shard-float')) animation.currentTime = 0
-    })
-  }
-
-  // Las piezas tienen que salir siempre desde el mismo sitio exacto: el centro. Si el
-  // mouse se va antes de que el montaje termine, --assemble está a media interpolación y
-  // soltarlas ahí las manda a desordenarse desde una pose distinta en cada pasada.
-  // data-settling deja la tarjeta montándose aunque el mouse ya no esté, y el desorden
-  // arranca recién cuando --assemble tocó el 0.
-  const release = () => {
-    const card = cardRef.current
-    if (!card) return
-    const piece = card.querySelector('.project-card__shard')
-    const assemble = Number.parseFloat(getComputedStyle(piece).getPropertyValue('--assemble'))
-    if (assemble > 0.001) {
-      card.dataset.settling = 'true'
-      return
-    }
-    restartDrift()
-  }
-
+  // Sin nada de js para las animaciones, a propósito. Por acá pasaron un restartDrift que
+  // rebobinaba la fase de los bucles, un data-settling que sostenía el montaje hasta el
+  // final y un data-held que soltaba la tarjeta en el primer cuadro; los tres producían
+  // saltos, porque cualquier cosa que mueva una pieza fuera de la interpolación puede
+  // caer en un momento en que se vea. Ahora el gesto entero es css interpolando entre dos
+  // estados, que por definición arranca del valor actual y no puede dar un salto.
   return (
-    <article
-      ref={cardRef}
-      className={`project-card ${project.layout}`}
-      onPointerLeave={release}
-      // El montaje también responde al foco de teclado, así que el desorden va con él:
-      // relatedTarget es a dónde se fue el foco, y solo cuenta si salió de la tarjeta.
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) release()
-      }}
-      // Las cuatro piezas terminan a la vez, así que la primera que avisa vale por todas.
-      // Al quitar el atributo, --assemble sale de 0 y ese es el desorden.
-      onTransitionEnd={(event) => {
-        const card = cardRef.current
-        if (event.propertyName !== '--assemble' || card?.dataset.settling !== 'true') return
-        delete card.dataset.settling
-        restartDrift()
-      }}
-    >
+    <article className={`project-card ${project.layout}`}>
       {/* Sin aria-hidden cuando lleva audio: adentro hay un botón, y esconderlo del
           árbol de accesibilidad dejaría un control enfocable que no se anuncia. */}
       <div className="project-card__media" aria-hidden={project.audio ? undefined : true}>

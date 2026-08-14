@@ -1462,114 +1462,143 @@ a {
   left: calc(-1 * var(--prompt-gutter));
 }
 
-/* Registrada y no una custom property suelta porque así el navegador sabe que es un
-   número y puede interpolarla: sobre esto se apoya el efecto entero, que no es más que
-   este valor yendo de 0 a 1 y de vuelta. 0 = tarjeta montada y quieta, 1 = piezas
-   desencajadas y flotando. Donde no haya @property el efecto sigue funcionando, solo
-   que los cambios de estado son secos en vez de progresivos. */
-@property --assemble {
-  syntax: '<number>';
-  inherits: true;
-  initial-value: 0;
-}
+/* Tarjeta en pedazos. Mismo reparto que la rejilla de skills, que es el que se porta
+   bien: dos capas por pieza, cada una con un solo trabajo, y ninguna se mete en la del
+   otro. Va así y no al revés porque una animación en curso le gana siempre a la
+   propiedad: en la misma capa, el hover no se vería.
 
-/* La amplitud del bucle, aparte del desencaje. Va suelta de --assemble porque las dos
-   cosas necesitan tiempos distintos al entrar: el desencaje se deshace en todo el
-   recorrido y el bucle tiene que callarse enseguida. Al salir van juntas. */
-@property --sway {
-  syntax: '<number>';
-  inherits: true;
-  initial-value: 0;
-}
+   La capa de FUERA —el .__shard, y lo que va dentro de la celda de la foto— hace la
+   deriva: un bucle infinito que no se detiene nunca, ni con el mouse encima. Sus
+   fotogramas son números literales, sin una sola var(), y eso no es descuido: si
+   dependieran de algo que se interpola, el navegador recalcularía la animación en el
+   hilo principal mientras ese algo se mueve y se la llevaría al compositor en cuanto se
+   detenga. En cada mudanza vuelve a rasterizar el texto medio píxel corrido, y eso se ve
+   como un salto aunque la posición no haya cambiado. Con fotogramas constantes no hay
+   mudanza posible. Para graduar la deriva hay que tocar los fotogramas.
 
-/* Tarjeta en pedazos: la foto, el título, el resumen y los tags se corren unos px y
-   giran menos de un grado —lo justo para leerse como piezas sueltas sin que el texto
-   pierda su renglón— y cada una flota en su bucle.
-   Al abrir la pestaña la tarjeta aparece armada y recién entonces se va soltando, pieza
-   por pieza: el desorden es el destino, no el punto de partida. El hover la vuelve a
-   montar en cascada con un punto de rebote, y al salir se suelta de nuevo.
-   Detrás de (hover: hover) porque en táctil no habría manera de reunirla y quedaría rota
-   para siempre; y detrás de no-preference porque con reduced motion este efecto es justo
-   el que sobra. En ambos casos la tarjeta sale entera y quieta, que es el estado que ya
-   define el bloque de arriba. */
+   La capa de DENTRO —el h3, el resumen, la lista, la celda de la foto— lleva el
+   desencaje, que es lo único que el hover toca: unos píxeles de corrimiento y menos de
+   un grado de giro, lo justo para leerse como piezas sueltas sin que el texto pierda su
+   renglón. Con el mouse encima se van a cero y la tarjeta se arma; al sacarlo vuelven.
+
+   Con el mouse encima la tarjeta queda armada pero sigue respirando, igual que la
+   rejilla de skills cuando se señala una ficha. Esa es la diferencia de fondo con la
+   versión anterior, que apagaba la deriva con el hover y para eso necesitaba interpolar
+   su amplitud —justo lo que hacía cambiar de hilo a la animación—.
+
+   Tampoco hay animación de entrada: la tarjeta aparece ya suelta y derivando, como las
+   fichas de skills. Lo único que ocurre al cargar es que el bucle ya venía corriendo.
+
+   Detrás de (hover: hover) porque en táctil no habría manera de reunir la tarjeta y
+   quedaría rota para siempre; y detrás de no-preference porque con reduced motion este
+   efecto es justo el que sobra. En ambos casos la tarjeta sale entera y quieta, que es
+   el estado que ya define el bloque de arriba. */
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
 
-  /* --shard y --float son las amplitudes (cuánto se desencaja y cuánto flota) y
-     --assemble las escala a las dos, así un solo valor gobierna el estado completo.
-     El peso está en el flote y no en el desencaje, igual que en las fichas de skills: el
-     desorden es el movimiento, no una pose. Con --shard alto, al sacar el mouse las
-     piezas viajaban hasta un tope y se quedaban ahí clavadas; con el reparto de ahora
-     apenas se descuadran y lo que se ve es la deriva de cada una, que no termina nunca.
-     Pasando --shard de ~2.2 las piezas chocan contra el recorte de la tarjeta. */
+  /* Mando único del desencaje: multiplica el recorrido de las cuatro piezas, así se
+     gradúa el efecto entero desde acá. No se anima nunca, es una constante.
+     Pasando de ~2 las piezas chocan contra el recorte de la tarjeta. */
   .project-card {
-    --shard: 0.6;
-    --float: 2.2;
-    --assemble: 1;
-    --sway: 1;
+    --shard: 1;
     border-color: var(--panel-border);
     transition: border-color 480ms ease;
   }
 
-  /* El valor del primer fotograma, antes de que se aplique el estilo real: sin esto la
-     tarjeta nacería ya desarmada y no habría nada que animar al entrar. */
-  @starting-style {
-
-    .project-card,
-    .project-card__media,
-    .project-card__shard {
-      --assemble: 0;
-      --sway: 0;
-    }
-  }
-
   /* focus-within y no solo hover: la tarjeta tiene un enlace, y llegando por teclado el
-     montaje tiene que pasar igual.
-     data-settling lo pone el js cuando el mouse se va con el montaje a medias: sostiene
-     este mismo estado hasta que las piezas terminen de llegar al centro, que es el único
-     punto desde el que pueden volver a soltarse. */
-  .project-card:is(:hover, :focus-within, [data-settling='true']) {
-    --assemble: 0;
-    --sway: 0;
+     montaje tiene que pasar igual. */
+  .project-card:is(:hover, :focus-within) {
     border-color: var(--border);
   }
 
-  /* La interpolación vive en las piezas y no en la tarjeta porque va en la capa de fuera
-     (la celda de la foto y los .__shard): lo de adentro hereda el valor ya interpolado,
-     así que declarada en las dos capas se suavizaría dos veces y llegaría tarde.
-     Las cuatro piezas comparten tiempo, curva y retardo: se montan y se sueltan juntas.
-     Antes cada una entraba con su propio retardo y el grupo se leía como una cola que
-     seguía llegando después de haber puesto el mouse encima.
-     Curva simétrica y de arranque lento a propósito, en vez de la --control-ease del
-     resto de la página: esa sale disparada y frena al final, y en un recorrido de más de
-     un segundo eso se ve como un tirón inicial seguido de una cola que no termina. Acá
-     lo que se quiere es que empiece despacio, tome cuerpo en el medio y se pose. */
+  /* Las cuatro piezas comparten tiempo y curva: se montan y se sueltan juntas. Con un
+     retardo por pieza el grupo se lee como una cola que sigue llegando después de que el
+     mouse ya está encima.
+     Misma duración en los dos sentidos y sin retardo. Cuando una transición se manda de
+     vuelta a su valor de origen, el navegador le recorta la duración en proporción a lo
+     que avanzó, así que la vuelta corre siempre al ritmo que tenga declarado: igualadas,
+     cortar el recorrido en cualquier punto se ve como la misma animación yendo para
+     atrás, con el mismo pico de velocidad.
+     La curva se elige por su pendiente inicial, que es lo que se siente al cortar a
+     medias: el navegador vuelve a correr la curva entera desde el principio, así que la
+     vuelta arranca a la velocidad que la curva tenga en su primer instante. Una simétrica
+     tipo cubic-bezier(0.45, 0, 0.55, 1) vale 0 ahí y la pieza se clava en seco antes de
+     volver; la --control-ease del resto de la página vale 3.5 y sale disparada. Esta vale
+     1 —el ritmo promedio del propio recorrido, o sea que cortar no cambia de velocidad— y
+     llega con pendiente 0, que es el poso suave. */
   .project-card__media,
-  .project-card__shard {
-    transition: --assemble 1600ms cubic-bezier(0.45, 0, 0.55, 1) 260ms,
-      --sway 1600ms cubic-bezier(0.45, 0, 0.55, 1) 260ms;
+  .project-card h3,
+  .project-card__summary,
+  .project-card ul {
+    transition: transform 1600ms cubic-bezier(0.2, 0.2, 0.6, 1);
   }
 
-  /* El montaje sale sin retardo —el gesto tiene que responder al mouse— y con la misma
-     curva simétrica de arriba. Se fue el punto de rebote del final: en un recorrido tan
-     corto el pasarse y volver se leía como un tirón, no como piezas encajando.
-     El bucle es lo único que no espera: se apaga en 240ms y el resto del recorrido las
-     piezas van derecho a su sitio. Antes esto se conseguía congelando la animación con
-     animation-play-state, y ese pausar y reanudar era justo lo que daba el tirón al
-     sacar el mouse (ver la nota de abajo). Bajando la amplitud a cero se consigue lo
-     mismo sin que la animación se detenga nunca. */
-  .project-card:is(:hover, :focus-within, [data-settling='true']) .project-card__media,
-  .project-card:is(:hover, :focus-within, [data-settling='true']) .project-card__shard {
-    transition: --assemble 1000ms cubic-bezier(0.45, 0, 0.55, 1) 0s,
-      --sway 240ms linear 0s;
+  /* El desencaje. La foto además queda un pelín chica: sin apoyar del todo, como la pieza
+     que todavía no encaja en su hueco. */
+  .project-card__media {
+    transform: translate3d(calc(var(--shard) * -3px), calc(var(--shard) * -2.4px), 0) rotate(calc(var(--shard) * -0.54deg)) scale(calc(1 - (var(--shard) * 0.009)));
+  }
+
+  .project-card h3 {
+    transform: translate3d(calc(var(--shard) * 3.6px), calc(var(--shard) * -1.8px), 0) rotate(calc(var(--shard) * 0.33deg));
+  }
+
+  .project-card__summary {
+    transform: translate3d(calc(var(--shard) * -2.4px), calc(var(--shard) * 1.8px), 0) rotate(calc(var(--shard) * -0.27deg));
+  }
+
+  .project-card ul {
+    transform: translate3d(calc(var(--shard) * 3px), calc(var(--shard) * 2.4px), 0) rotate(calc(var(--shard) * 0.36deg));
+  }
+
+  /* El montaje: las cuatro a su sitio. Interpolar hacia none es interpolar hacia la
+     identidad, así que el recorrido es el mismo transform yendo a cero. */
+  .project-card:is(:hover, :focus-within) .project-card__media,
+  .project-card:is(:hover, :focus-within) h3,
+  .project-card:is(:hover, :focus-within) .project-card__summary,
+  .project-card:is(:hover, :focus-within) ul {
+    transform: none;
+  }
+
+  /* La deriva, en la capa de fuera. Recorridos distintos y desfases negativos que
+     arrancan a mitad de ciclo, igual que en skills: las cuatro piezas nunca coinciden en
+     el mismo punto del recorrido, que es lo que delataría la animación. Acá sí pueden
+     bajar del reposo, que el recorte de la tarjeta las contiene y no llegan al scroll del
+     panel. */
+  .project-card__shard,
+  .project-card__media>* {
+    animation: card-drift-a 32s ease-in-out infinite;
+  }
+
+  /* > * y no img: el tercio de la tarjeta lleva la foto en un proyecto y el reproductor
+     en otro, y los dos son la misma pieza. */
+  .project-card__media>* {
+    animation-name: card-drift-a;
+    animation-duration: 32s;
+    animation-delay: -5s;
+  }
+
+  .project-card__shard--title {
+    animation-name: card-drift-b;
+    animation-duration: 27s;
+    animation-delay: -13s;
+  }
+
+  .project-card__shard--summary {
+    animation-name: card-drift-c;
+    animation-duration: 37s;
+    animation-delay: -8s;
+  }
+
+  .project-card__shard--tags {
+    animation-name: card-drift-d;
+    animation-duration: 30s;
+    animation-delay: -19s;
   }
 
   /* Las ocho piezas se quedan en su propia capa de composición de forma permanente. Sin
      esto Chrome las promueve cuando se mueven y las devuelve al plano cuando se quedan
-     quietas —al pausar el bucle con el mouse encima—, y en ese ida y vuelta el texto se
-     vuelve a rasterizar: cambia el suavizado y se corre un subpíxel justo cuando arranca
-     el desorden. Los transforms no dan ningún salto, es solo el redibujado.
-     Vale la pena tenerlas fijas: la deriva no termina nunca, así que son piezas que están
-     animándose siempre, no una excepción puntual. */
+     quietas, y en ese ida y vuelta el texto se vuelve a rasterizar: cambia el suavizado y
+     se corre un subpíxel. Los transforms no dan ningún salto, es solo el redibujado. */
   .project-card__media,
   .project-card__media>*,
   .project-card__shard,
@@ -1578,76 +1607,12 @@ a {
   .project-card ul {
     will-change: transform;
   }
-
-  /* El desencaje. La foto además queda un pelín chica: sin apoyar del todo, como la
-     pieza que todavía no encaja en su hueco. */
-  .project-card__media {
-    transform: translate3d(calc(var(--shard) * var(--assemble) * -5px), calc(var(--shard) * var(--assemble) * -4px), 0) rotate(calc(var(--shard) * var(--assemble) * -0.9deg)) scale(calc(1 - (var(--shard) * var(--assemble) * 0.015)));
-  }
-
-  .project-card h3 {
-    transform: translate3d(calc(var(--shard) * var(--assemble) * 6px), calc(var(--shard) * var(--assemble) * -3px), 0) rotate(calc(var(--shard) * var(--assemble) * 0.55deg));
-  }
-
-  .project-card__summary {
-    transform: translate3d(calc(var(--shard) * var(--assemble) * -4px), calc(var(--shard) * var(--assemble) * 3px), 0) rotate(calc(var(--shard) * var(--assemble) * -0.45deg));
-  }
-
-  .project-card ul {
-    transform: translate3d(calc(var(--shard) * var(--assemble) * 5px), calc(var(--shard) * var(--assemble) * 4px), 0) rotate(calc(var(--shard) * var(--assemble) * 0.6deg));
-  }
-
-  /* Las piezas sueltas no se quedan quietas: cada una flota en su bucle, como las
-     fichas de skills, y por lo mismo va en dos capas. La de fuera (el .__shard, y la
-     propia foto dentro de su celda) hace el bucle; la de dentro guarda el desencaje y
-     el montaje del hover.
-     Recorridos distintos y desfases negativos, igual que en la deriva de skills: las
-     cuatro piezas nunca coinciden en el mismo punto. Acá sí pueden bajar del reposo,
-     que el recorte del card las contiene y no llegan al scroll del panel. */
-  .project-card__shard,
-  .project-card__media>* {
-    animation: shard-float-a 32s ease-in-out infinite;
-  }
-
-  /* > * y no img: el tercio de la card lleva la foto en un proyecto y el reproductor en
-     otro, y los dos son la misma pieza. */
-  .project-card__media>* {
-    animation-name: shard-float-a;
-    animation-duration: 32s;
-    animation-delay: -5s;
-  }
-
-  .project-card__shard--title {
-    animation-name: shard-float-b;
-    animation-duration: 27s;
-    animation-delay: -13s;
-  }
-
-  .project-card__shard--summary {
-    animation-name: shard-float-c;
-    animation-duration: 37s;
-    animation-delay: -8s;
-  }
-
-  .project-card__shard--tags {
-    animation-name: shard-float-d;
-    animation-duration: 30s;
-    animation-delay: -19s;
-  }
-
-  /* Acá había un animation-play-state: paused con el mouse encima. Congelaba la fase para
-     que el aterrizaje saliera derecho, pero al sacar el mouse la animación se reanudaba y
-     eso daba un tirón: Chrome redondea la capa a píxel entero mientras nada se mueve y lo
-     deja de hacer en cuanto hay una animación corriendo, así que el texto se volvía a
-     rasterizar medio píxel más allá. Con el retardo de 260ms la tarjeta estaba quieta
-     justo en ese momento, sin nada que lo tapara: se veía el salto seco y recién después
-     empezaba el desorden.
-     Ahora la animación no se detiene nunca —la capa no cambia de estado y no hay nada que
-     redondear— y la fase la calla --sway, que baja a cero en 240ms. El aterrizaje sale
-     igual de derecho y la salida arranca desde la quietud. */
 }
 
-@keyframes shard-float-a {
+/* Los cuatro recorridos de la deriva. Números literales a propósito: ver la nota de
+   arriba. Como el bucle ya no se apaga con el hover, la órbita es chica —poco más de 2px
+   y un cuarto de grado— para que la tarjeta armada respire sin desarmarse. */
+@keyframes card-drift-a {
 
   0%,
   100% {
@@ -1655,15 +1620,15 @@ a {
   }
 
   33% {
-    transform: translate3d(calc(var(--float) * var(--sway) * 2.5px), calc(var(--float) * var(--sway) * -2px), 0) rotate(calc(var(--float) * var(--sway) * 0.3deg));
+    transform: translate3d(2px, -1.6px, 0) rotate(0.24deg);
   }
 
   66% {
-    transform: translate3d(calc(var(--float) * var(--sway) * -1.5px), calc(var(--float) * var(--sway) * 2.5px), 0) rotate(calc(var(--float) * var(--sway) * -0.25deg));
+    transform: translate3d(-1.2px, 2px, 0) rotate(-0.2deg);
   }
 }
 
-@keyframes shard-float-b {
+@keyframes card-drift-b {
 
   0%,
   100% {
@@ -1671,15 +1636,15 @@ a {
   }
 
   30% {
-    transform: translate3d(calc(var(--float) * var(--sway) * -3px), calc(var(--float) * var(--sway) * 1.5px), 0) rotate(calc(var(--float) * var(--sway) * -0.3deg));
+    transform: translate3d(-2.4px, 1.2px, 0) rotate(-0.24deg);
   }
 
   65% {
-    transform: translate3d(calc(var(--float) * var(--sway) * 2px), calc(var(--float) * var(--sway) * -2.5px), 0) rotate(calc(var(--float) * var(--sway) * 0.28deg));
+    transform: translate3d(1.6px, -2px, 0) rotate(0.22deg);
   }
 }
 
-@keyframes shard-float-c {
+@keyframes card-drift-c {
 
   0%,
   100% {
@@ -1687,15 +1652,15 @@ a {
   }
 
   40% {
-    transform: translate3d(calc(var(--float) * var(--sway) * 2px), calc(var(--float) * var(--sway) * 2.5px), 0) rotate(calc(var(--float) * var(--sway) * 0.32deg));
+    transform: translate3d(1.6px, 2px, 0) rotate(0.26deg);
   }
 
   75% {
-    transform: translate3d(calc(var(--float) * var(--sway) * -2.5px), calc(var(--float) * var(--sway) * -1.5px), 0) rotate(calc(var(--float) * var(--sway) * -0.22deg));
+    transform: translate3d(-2px, -1.2px, 0) rotate(-0.18deg);
   }
 }
 
-@keyframes shard-float-d {
+@keyframes card-drift-d {
 
   0%,
   100% {
@@ -1703,15 +1668,15 @@ a {
   }
 
   25% {
-    transform: translate3d(calc(var(--float) * var(--sway) * -2px), calc(var(--float) * var(--sway) * -2.5px), 0) rotate(calc(var(--float) * var(--sway) * -0.28deg));
+    transform: translate3d(-1.6px, -2px, 0) rotate(-0.22deg);
   }
 
   55% {
-    transform: translate3d(calc(var(--float) * var(--sway) * 2.5px), calc(var(--float) * var(--sway) * 1px), 0) rotate(calc(var(--float) * var(--sway) * 0.34deg));
+    transform: translate3d(2px, 0.8px, 0) rotate(0.27deg);
   }
 
   80% {
-    transform: translate3d(calc(var(--float) * var(--sway) * 1px), calc(var(--float) * var(--sway) * 2.5px), 0) rotate(calc(var(--float) * var(--sway) * 0.15deg));
+    transform: translate3d(0.8px, 2px, 0) rotate(0.12deg);
   }
 }
 
