@@ -25,6 +25,22 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  /* El texto no se selecciona y el cursor no se convierte en barra: la página se maneja
+     como una interfaz, no como un documento que se copia. Va con cursor y user-select y
+     no con pointer-events, que apagaría también el hover de las tarjetas y las fichas. */
+  cursor: default;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Los controles quedan fuera de la regla de arriba. En los campos hay que poder escribir,
+   marcar y borrar, así que recuperan la barra y la selección; enlaces y botones traen su
+   propio cursor y no les toca nada. */
+input,
+textarea {
+  cursor: text;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 button,
@@ -103,8 +119,9 @@ a {
   --lang-width: 68px;
   --hero-columns-width: calc(94px + 12px + 623px);
   /* La botonera es absoluta, así que el padding del header no la arrastra: ambos
-     leen esta variable para bajar juntos. */
-  --header-top: 48px;
+     leen esta variable para bajar juntos. En 0 la página arranca pegada al borde de
+     arriba; subir este número es lo único que hace falta para devolverle aire. */
+  --header-top: 30px;
   position: relative;
   flex: 0 0 auto;
   padding-top: var(--header-top);
@@ -335,6 +352,13 @@ a {
   gap: 12px;
   align-items: start;
   margin-top: 0;
+  /* Lo que baja el texto dentro del hero. Las dos columnas leen el mismo número, así
+     que el borde de arriba de la foto cae en el mismo renglón que el "> hola!". Si se
+     toca, las dos se mueven juntas y la alineación se mantiene. */
+  --hero-text-top: 40px;
+  /* Lo que la foto sube respecto de ese renglón: a ras exacto el círculo se veía
+     hundido, porque el "> " no llena el alto de su línea y deja aire arriba. */
+  --hero-photo-lift: 50px;
 }
 
 .hero__profile {
@@ -345,16 +369,96 @@ a {
      abajo, así que la única forma de darle aire a la foto es correrla a la izquierda. */
   justify-self: start;
   margin-left: -20px;
+  padding-top: calc(var(--hero-text-top) - var(--hero-photo-lift));
 }
 
+/* Es el marco de la foto, no la imagen: el drop-shadow se queda acá porque sigue el
+   alfa de lo que hay dentro, y adentro hay un círculo, así que la sombra en accent sale
+   redonda como con el svg anterior. El js le escribe data-hover-effect en cada hover. */
 .hero__avatar {
+  position: relative;
   width: 94px;
   height: 94px;
+  border-radius: 50%;
   filter: drop-shadow(2px 2px 0 var(--accent));
 }
 
+/* El aro toma --media, que es el inverso del fondo: blanco en oscuro y negro en claro,
+   igual que el disco del avatar que había antes. */
+.hero__photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 2px solid var(--media);
+  border-radius: 50%;
+  object-fit: cover;
+  transition: transform 320ms var(--control-ease), filter 320ms var(--control-ease);
+}
+
+.hero__avatar[data-hover-effect='zoom'] .hero__photo {
+  transform: scale(1.08);
+}
+
+.hero__avatar[data-hover-effect='tilt'] .hero__photo {
+  transform: rotate(-6deg) scale(1.04);
+}
+
+.hero__avatar[data-hover-effect='tone'] .hero__photo {
+  filter: grayscale(1) contrast(1.08);
+}
+
+.hero__avatar[data-hover-effect='sway'] .hero__photo {
+  animation: avatar-sway 700ms var(--control-ease);
+}
+
+.hero__avatar[data-hover-effect='pop'] .hero__photo {
+  animation: avatar-pop 520ms var(--control-ease);
+}
+
+@keyframes avatar-sway {
+
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+
+  30% {
+    transform: rotate(5deg);
+  }
+
+  65% {
+    transform: rotate(-5deg);
+  }
+}
+
+@keyframes avatar-pop {
+  0% {
+    transform: scale(1);
+  }
+
+  45% {
+    transform: scale(1.12);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Se cae todo el movimiento; el cambio de tono no es movimiento, así que ese sigue. */
+@media (prefers-reduced-motion: reduce) {
+  .hero__photo {
+    transition: filter 320ms var(--control-ease);
+  }
+
+  .hero__avatar[data-hover-effect] .hero__photo {
+    transform: none;
+    animation: none;
+  }
+}
+
 .hero__content {
-  padding-top: 40px;
+  padding-top: var(--hero-text-top);
 }
 
 .hero-title {
@@ -363,7 +467,7 @@ a {
   line-height: 1.15;
 }
 
-.hero-title > span {
+.hero-title>span {
   display: block;
 }
 
@@ -392,7 +496,7 @@ a {
   text-align: left;
 }
 
-.hero p + p {
+.hero p+p {
   margin-top: 19px;
 }
 
@@ -666,12 +770,12 @@ a {
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
-  /* Altura única: los 381px que mide skills con sus 9 arcos a separación natural.
+  /* Altura única: los 379px que mide skills con sus 9 arcos a separación natural.
      Es a la vez mínimo y máximo, así que las tres pestañas rellenan ese alto y
      ninguna se estira de más. Si algo no cabe, el panel tiene su scroll.
      El número es medido: incluye el padding del panel y el de skills, así que si se
      toca cualquiera de esos hay que recalcularlo soltando la altura del panel. */
-  height: 381px;
+  height: 379px;
   min-height: 0;
   /* El padding derecho es menor porque la barra aporta su propio aire: la suma
      con el canal de 24px deja el mismo ancho de contenido que antes. */
@@ -700,18 +804,28 @@ a {
 /* Las tres pestañas rellenan el panel en vez de quedar centradas o pegadas arriba:
    así arrancan todas en el mismo punto y el sobrante se reparte dentro. Si el
    contenido no cabe, el panel ya tiene su scroll. */
-.tab-panel > .skills {
+.tab-panel>.skills {
   flex: 1 1 auto;
   min-height: 0;
   margin-block: 0;
 }
 
-.tab-panel > .projects {
-  flex: 1 1 auto;
-  min-height: 0;
+/* Sin encoger: con más de un proyecto la rejilla no entra en el panel, y cediendo alto
+   repartía el hueco entre las filas —las tarjetas quedaban en 134px con su contenido
+   de 193px desbordando por debajo del recorte—. Manteniendo su alto natural, el que
+   cede es el panel, que para eso tiene su scroll. */
+.tab-panel>.projects {
+  flex: 0 0 auto;
 }
 
-.tab-panel > .contact-panel {
+/* Solo la pestaña de proyectos entra más arriba: las tarjetas ya traen su propio marco,
+   así que el aire de arriba del panel las separaba de las pestañas de más y rompía la
+   lectura de lista. Skills y contacto conservan los 30px, que ahí sí hacen falta. */
+.tabs-card[data-active-tab='projects'] .tab-panel {
+  padding-top: 25px;
+}
+
+.tab-panel>.contact-panel {
   flex: 1 1 auto;
   margin-block: 0;
 }
@@ -769,7 +883,7 @@ a {
   width: 580px;
   /* padding y no margin: al rellenar el panel, el margen se comería alto del propio
      bloque y las filas tendrían menos sitio para repartirse. */
-  padding-block: 16px;
+  padding-block: 22px 8px;
   margin: 0 auto;
 }
 
@@ -839,17 +953,194 @@ a {
   color: var(--accent);
 }
 
-.skill-item--motion-1:hover .skill-arc { transform: translate(var(--arc-x), var(--arc-y)) rotate(var(--arc-rotate)); }
-.skill-item--motion-2:hover .skill-arc { transform: translateX(var(--arc-x)) scaleX(var(--arc-scale)); }
-.skill-item--motion-3:hover .skill-arc { transform: translateY(var(--arc-y)) skewX(var(--arc-skew)); }
-.skill-item--motion-4:hover .skill-arc { transform: rotate(var(--arc-rotate)) scaleY(var(--arc-scale)); }
-.skill-item--motion-5:hover .skill-arc { transform: translate(var(--arc-x), var(--arc-y)) scale(var(--arc-scale)); }
-.skill-item--motion-6:hover .skill-arc { transform: translateX(var(--arc-x)) rotate(var(--arc-rotate)) skewY(var(--arc-skew)); }
-.skill-item--motion-7:hover .skill-arc { transform: translateY(var(--arc-y)) scaleX(var(--arc-scale)) rotate(var(--arc-rotate)); }
-.skill-item--motion-8:hover .skill-arc { transform: translate(var(--arc-x), var(--arc-y)) skewX(var(--arc-skew)); }
-.skill-item--motion-9:hover .skill-arc { transform: rotate(var(--arc-rotate)) scale(var(--arc-scale)); }
-.skill-item--motion-10:hover .skill-arc { transform: translateX(var(--arc-x)) scaleY(var(--arc-scale)); }
-.skill-item--motion-11:hover .skill-arc { transform: translateY(var(--arc-y)) rotate(var(--arc-rotate)) scaleX(var(--arc-scale)); }
+.skill-item--motion-1:hover .skill-arc {
+  transform: translate(var(--arc-x), var(--arc-y)) rotate(var(--arc-rotate));
+}
+
+.skill-item--motion-2:hover .skill-arc {
+  transform: translateX(var(--arc-x)) scaleX(var(--arc-scale));
+}
+
+.skill-item--motion-3:hover .skill-arc {
+  transform: translateY(var(--arc-y)) skewX(var(--arc-skew));
+}
+
+.skill-item--motion-4:hover .skill-arc {
+  transform: rotate(var(--arc-rotate)) scaleY(var(--arc-scale));
+}
+
+.skill-item--motion-5:hover .skill-arc {
+  transform: translate(var(--arc-x), var(--arc-y)) scale(var(--arc-scale));
+}
+
+.skill-item--motion-6:hover .skill-arc {
+  transform: translateX(var(--arc-x)) rotate(var(--arc-rotate)) skewY(var(--arc-skew));
+}
+
+.skill-item--motion-7:hover .skill-arc {
+  transform: translateY(var(--arc-y)) scaleX(var(--arc-scale)) rotate(var(--arc-rotate));
+}
+
+.skill-item--motion-8:hover .skill-arc {
+  transform: translate(var(--arc-x), var(--arc-y)) skewX(var(--arc-skew));
+}
+
+.skill-item--motion-9:hover .skill-arc {
+  transform: rotate(var(--arc-rotate)) scale(var(--arc-scale));
+}
+
+.skill-item--motion-10:hover .skill-arc {
+  transform: translateX(var(--arc-x)) scaleY(var(--arc-scale));
+}
+
+.skill-item--motion-11:hover .skill-arc {
+  transform: translateY(var(--arc-y)) rotate(var(--arc-rotate)) scaleX(var(--arc-scale));
+}
+
+/* Deriva en el sitio: cada ficha se mueve sola dentro de una órbita de 3px y medio
+   grado, lo justo para que la rejilla respire sin que ninguna se lleve la mirada.
+   Va en el hueco y no en la ficha porque el hover ya ocupa el transform de
+   .skill-item, y una animación en curso le gana siempre a la propiedad: en la misma
+   capa el hover no se vería. Es el mismo reparto que en los globos del contacto. */
+.skill-slot {
+  /* Mando único de la deriva: multiplica el recorrido de los tres keyframes, así se
+     gradúa el efecto entero desde acá sin tocar fotograma por fotograma. En 1 son los
+     ±3px de la primera versión.
+     De lado sobra sitio —medidos 48px entre el arco más expuesto y el recorte del
+     panel, o sea unas 16 unidades de mando—, así que el límite de verdad es el de
+     abajo: los keyframes no pueden bajar del reposo o el panel saca su barra de
+     scroll. Subir este número no rompe esa regla; reescribir los fotogramas, sí. */
+  --drift: 2.6;
+  animation: skill-drift-a 15s ease-in-out infinite;
+}
+
+/* El transform del hueco abre contexto de apilado, así que el z-index del hover se
+   quedaría encerrado ahí dentro: la ficha activa sube desde el hueco. */
+.skill-slot:has(.skill-item:hover) {
+  z-index: 2;
+}
+
+/* Duraciones sin múltiplo común y desfases negativos, que arrancan a mitad de ciclo:
+   las nueve fichas nunca coinciden en el mismo punto del recorrido, que es lo que
+   delataría la animación. */
+.skill-slot--1 {
+  animation-name: skill-drift-a;
+  animation-duration: 13s;
+  animation-delay: -1.5s;
+}
+
+.skill-slot--2 {
+  animation-name: skill-drift-b;
+  animation-duration: 17s;
+  animation-delay: -6s;
+}
+
+.skill-slot--3 {
+  animation-name: skill-drift-c;
+  animation-duration: 14.5s;
+  animation-delay: -11s;
+}
+
+.skill-slot--4 {
+  animation-name: skill-drift-b;
+  animation-duration: 19s;
+  animation-delay: -3.5s;
+}
+
+.skill-slot--5 {
+  animation-name: skill-drift-c;
+  animation-duration: 16s;
+  animation-delay: -8.5s;
+}
+
+.skill-slot--6 {
+  animation-name: skill-drift-a;
+  animation-duration: 21s;
+  animation-delay: -13s;
+}
+
+.skill-slot--7 {
+  animation-name: skill-drift-c;
+  animation-duration: 18s;
+  animation-delay: -5s;
+}
+
+.skill-slot--8 {
+  animation-name: skill-drift-a;
+  animation-duration: 15.5s;
+  animation-delay: -9.5s;
+}
+
+.skill-slot--9 {
+  animation-name: skill-drift-b;
+  animation-duration: 22s;
+  animation-delay: -2.5s;
+}
+
+/* Los tres recorridos solo suben: el transform sí cuenta para el desbordamiento del
+   panel, que está medido al milímetro, y bajar aunque sea 3px le sacaría la barra de
+   scroll. Hacia arriba no hay scroll que crear, así que por ahí es libre. */
+@keyframes skill-drift-a {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  25% {
+    transform: translate3d(calc(var(--drift) * 2.5px), calc(var(--drift) * -2.5px), 0) rotate(calc(var(--drift) * 0.5deg));
+  }
+
+  50% {
+    transform: translate3d(calc(var(--drift) * 0.5px), calc(var(--drift) * -4px), 0) rotate(0deg);
+  }
+
+  75% {
+    transform: translate3d(calc(var(--drift) * -2.5px), calc(var(--drift) * -2px), 0) rotate(calc(var(--drift) * -0.45deg));
+  }
+}
+
+@keyframes skill-drift-b {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  30% {
+    transform: translate3d(calc(var(--drift) * -3px), calc(var(--drift) * -2px), 0) rotate(calc(var(--drift) * -0.5deg));
+  }
+
+  60% {
+    transform: translate3d(calc(var(--drift) * 1.5px), calc(var(--drift) * -3.5px), 0) rotate(calc(var(--drift) * 0.4deg));
+  }
+
+  85% {
+    transform: translate3d(calc(var(--drift) * 2.5px), calc(var(--drift) * -1.5px), 0) rotate(calc(var(--drift) * 0.3deg));
+  }
+}
+
+@keyframes skill-drift-c {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  35% {
+    transform: translate3d(calc(var(--drift) * 3px), calc(var(--drift) * -2px), 0) rotate(calc(var(--drift) * 0.45deg));
+  }
+
+  70% {
+    transform: translate3d(calc(var(--drift) * -1.5px), calc(var(--drift) * -3px), 0) rotate(calc(var(--drift) * -0.35deg));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skill-slot {
+    animation: none;
+  }
+}
 
 /* 100% y no 580px: con 580 se desbordaba 8px de la caja de contenido y el recorte
    del panel se comía la sombra de las tarjetas. */
@@ -862,7 +1153,9 @@ a {
      debajo de la última tarjeta. */
   align-content: start;
   width: 100%;
-  padding-block: 10px 24px;
+  /* Arriba sin aire propio: la primera tarjeta arranca contra el padding del panel, y
+     el gap deja respirar a las siguientes sin que la pila deje de leerse como lista. */
+  padding-block: 0 20px;
   margin: 0 auto;
 }
 
@@ -915,6 +1208,11 @@ a {
    poco ancho útil al texto. */
 .project-card--solo .project-card__content {
   padding: 20px 24px;
+  /* La divisoria vive acá y no en la celda de la foto, que es una de las piezas que se
+     desencajan y flotan: montada en la pieza, la línea se iba de paseo con ella. El
+     contenedor del texto no se mueve nunca —los que se mueven son los .__shard de
+     adentro—, así que desde acá la línea queda clavada. */
+  border-left: 1px solid var(--border);
 }
 
 /* Un tercio para la foto, dos tercios para el texto. */
@@ -929,11 +1227,155 @@ a {
    del card para que solo se vea el marco, no una caja de color. */
 .project-card--solo .project-card__media {
   display: grid;
+  /* Ancla del atajo "ir", que va superpuesto a la foto. */
+  position: relative;
   min-height: 0;
   padding: 16px;
   place-items: center;
-  border-right: 1px solid var(--border);
   background-color: transparent;
+}
+
+.project-card__go {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  /* Apagado no intercepta clics: si no, taparía la foto entera todo el tiempo. */
+  pointer-events: none;
+  text-decoration: none;
+  transition: opacity 260ms var(--control-ease);
+}
+
+.project-card:hover .project-card__go,
+.project-card:focus-within .project-card__go {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Solo el icono, en un disco: sin la palabra al lado la pastilla se queda sin razón de
+   ser alargada, y el redondo deja el icono más grande sin ocupar más ancho sobre la foto.
+   Traslúcido y no opaco: la foto se sigue viendo detrás, que es de lo que habla el
+   botón. El fondo sube a accent pleno recién cuando el cursor está encima de él. */
+.project-card__go-label {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--page-bg) 72%, transparent);
+  /* Entra subiendo un pelín: sin esto aparece plano, como un cartel pegado. */
+  transform: translateY(4px) scale(0.96);
+  transition: transform 260ms var(--control-ease), background-color 160ms ease, color 160ms ease;
+}
+
+.project-card:hover .project-card__go-label,
+.project-card:focus-within .project-card__go-label {
+  transform: none;
+}
+
+.project-card__go:hover .project-card__go-label {
+  color: var(--page-bg);
+  background: var(--accent);
+}
+
+.project-card__go-icon {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+
+/* Reproductor del tercio de la card: botón arriba y la onda debajo. En columna y no en
+   fila porque el tercio da unos 150px útiles, y en fila el botón se comería la mitad. */
+.audio-preview {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  width: 100%;
+}
+
+.audio-preview__toggle {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  place-items: center;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  color: var(--text);
+  background: transparent;
+  cursor: pointer;
+  transition: var(--control-transition);
+}
+
+.audio-preview__toggle:hover,
+.audio-preview__toggle:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-small);
+}
+
+.audio-preview__toggle svg {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+  /* El triángulo del play pesa a la izquierda: sin este pelín se ve descentrado dentro
+     del círculo aunque la caja esté centrada. */
+  margin-left: 1px;
+}
+
+.audio-preview__toggle:has(rect) svg {
+  margin-left: 0;
+}
+
+/* align-items center: cada barra crece hacia arriba y hacia abajo desde el eje, que es
+   como se lee una onda. */
+.audio-preview__wave {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  width: 100%;
+  height: 38px;
+}
+
+.audio-preview__bar {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 1px;
+  background: var(--border);
+  transition: background-color 120ms linear;
+}
+
+.audio-preview__bar[data-played='true'] {
+  background: var(--accent);
+}
+
+/* Al pasar por la tarjeta el reproductor se enciende entero: el botón toma el accent y
+   la onda pasa del gris a un accent a media tinta, que es la invitación a darle play.
+   Las barras ya reproducidas se quedan en accent pleno, así no se pierde por dónde va;
+   por eso esta regla repite el selector de arriba con más peso, o el encendido la
+   taparía. */
+.project-card:hover .audio-preview__toggle,
+.project-card:focus-within .audio-preview__toggle {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.project-card:hover .audio-preview__bar,
+.project-card:focus-within .audio-preview__bar {
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.project-card:hover .audio-preview__bar[data-played='true'],
+.project-card:focus-within .audio-preview__bar[data-played='true'] {
+  background: var(--accent);
 }
 
 /* width 100% + height auto: la imagen conserva su proporción y se ve completa. */
@@ -1020,6 +1462,259 @@ a {
   left: calc(-1 * var(--prompt-gutter));
 }
 
+/* Registrada y no una custom property suelta porque así el navegador sabe que es un
+   número y puede interpolarla: sobre esto se apoya el efecto entero, que no es más que
+   este valor yendo de 0 a 1 y de vuelta. 0 = tarjeta montada y quieta, 1 = piezas
+   desencajadas y flotando. Donde no haya @property el efecto sigue funcionando, solo
+   que los cambios de estado son secos en vez de progresivos. */
+@property --assemble {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+/* La amplitud del bucle, aparte del desencaje. Va suelta de --assemble porque las dos
+   cosas necesitan tiempos distintos al entrar: el desencaje se deshace en todo el
+   recorrido y el bucle tiene que callarse enseguida. Al salir van juntas. */
+@property --sway {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+/* Tarjeta en pedazos: la foto, el título, el resumen y los tags se corren unos px y
+   giran menos de un grado —lo justo para leerse como piezas sueltas sin que el texto
+   pierda su renglón— y cada una flota en su bucle.
+   Al abrir la pestaña la tarjeta aparece armada y recién entonces se va soltando, pieza
+   por pieza: el desorden es el destino, no el punto de partida. El hover la vuelve a
+   montar en cascada con un punto de rebote, y al salir se suelta de nuevo.
+   Detrás de (hover: hover) porque en táctil no habría manera de reunirla y quedaría rota
+   para siempre; y detrás de no-preference porque con reduced motion este efecto es justo
+   el que sobra. En ambos casos la tarjeta sale entera y quieta, que es el estado que ya
+   define el bloque de arriba. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+
+  /* --shard y --float son las amplitudes (cuánto se desencaja y cuánto flota) y
+     --assemble las escala a las dos, así un solo valor gobierna el estado completo.
+     El peso está en el flote y no en el desencaje, igual que en las fichas de skills: el
+     desorden es el movimiento, no una pose. Con --shard alto, al sacar el mouse las
+     piezas viajaban hasta un tope y se quedaban ahí clavadas; con el reparto de ahora
+     apenas se descuadran y lo que se ve es la deriva de cada una, que no termina nunca.
+     Pasando --shard de ~2.2 las piezas chocan contra el recorte de la tarjeta. */
+  .project-card {
+    --shard: 0.6;
+    --float: 2.2;
+    --assemble: 1;
+    --sway: 1;
+    border-color: var(--panel-border);
+    transition: border-color 480ms ease;
+  }
+
+  /* El valor del primer fotograma, antes de que se aplique el estilo real: sin esto la
+     tarjeta nacería ya desarmada y no habría nada que animar al entrar. */
+  @starting-style {
+
+    .project-card,
+    .project-card__media,
+    .project-card__shard {
+      --assemble: 0;
+      --sway: 0;
+    }
+  }
+
+  /* focus-within y no solo hover: la tarjeta tiene un enlace, y llegando por teclado el
+     montaje tiene que pasar igual.
+     data-settling lo pone el js cuando el mouse se va con el montaje a medias: sostiene
+     este mismo estado hasta que las piezas terminen de llegar al centro, que es el único
+     punto desde el que pueden volver a soltarse. */
+  .project-card:is(:hover, :focus-within, [data-settling='true']) {
+    --assemble: 0;
+    --sway: 0;
+    border-color: var(--border);
+  }
+
+  /* La interpolación vive en las piezas y no en la tarjeta porque va en la capa de fuera
+     (la celda de la foto y los .__shard): lo de adentro hereda el valor ya interpolado,
+     así que declarada en las dos capas se suavizaría dos veces y llegaría tarde.
+     Las cuatro piezas comparten tiempo, curva y retardo: se montan y se sueltan juntas.
+     Antes cada una entraba con su propio retardo y el grupo se leía como una cola que
+     seguía llegando después de haber puesto el mouse encima.
+     Curva simétrica y de arranque lento a propósito, en vez de la --control-ease del
+     resto de la página: esa sale disparada y frena al final, y en un recorrido de más de
+     un segundo eso se ve como un tirón inicial seguido de una cola que no termina. Acá
+     lo que se quiere es que empiece despacio, tome cuerpo en el medio y se pose. */
+  .project-card__media,
+  .project-card__shard {
+    transition: --assemble 1600ms cubic-bezier(0.45, 0, 0.55, 1) 260ms,
+      --sway 1600ms cubic-bezier(0.45, 0, 0.55, 1) 260ms;
+  }
+
+  /* El montaje sale sin retardo —el gesto tiene que responder al mouse— y con la misma
+     curva simétrica de arriba. Se fue el punto de rebote del final: en un recorrido tan
+     corto el pasarse y volver se leía como un tirón, no como piezas encajando.
+     El bucle es lo único que no espera: se apaga en 240ms y el resto del recorrido las
+     piezas van derecho a su sitio. Antes esto se conseguía congelando la animación con
+     animation-play-state, y ese pausar y reanudar era justo lo que daba el tirón al
+     sacar el mouse (ver la nota de abajo). Bajando la amplitud a cero se consigue lo
+     mismo sin que la animación se detenga nunca. */
+  .project-card:is(:hover, :focus-within, [data-settling='true']) .project-card__media,
+  .project-card:is(:hover, :focus-within, [data-settling='true']) .project-card__shard {
+    transition: --assemble 1000ms cubic-bezier(0.45, 0, 0.55, 1) 0s,
+      --sway 240ms linear 0s;
+  }
+
+  /* Las ocho piezas se quedan en su propia capa de composición de forma permanente. Sin
+     esto Chrome las promueve cuando se mueven y las devuelve al plano cuando se quedan
+     quietas —al pausar el bucle con el mouse encima—, y en ese ida y vuelta el texto se
+     vuelve a rasterizar: cambia el suavizado y se corre un subpíxel justo cuando arranca
+     el desorden. Los transforms no dan ningún salto, es solo el redibujado.
+     Vale la pena tenerlas fijas: la deriva no termina nunca, así que son piezas que están
+     animándose siempre, no una excepción puntual. */
+  .project-card__media,
+  .project-card__media>*,
+  .project-card__shard,
+  .project-card h3,
+  .project-card__summary,
+  .project-card ul {
+    will-change: transform;
+  }
+
+  /* El desencaje. La foto además queda un pelín chica: sin apoyar del todo, como la
+     pieza que todavía no encaja en su hueco. */
+  .project-card__media {
+    transform: translate3d(calc(var(--shard) * var(--assemble) * -5px), calc(var(--shard) * var(--assemble) * -4px), 0) rotate(calc(var(--shard) * var(--assemble) * -0.9deg)) scale(calc(1 - (var(--shard) * var(--assemble) * 0.015)));
+  }
+
+  .project-card h3 {
+    transform: translate3d(calc(var(--shard) * var(--assemble) * 6px), calc(var(--shard) * var(--assemble) * -3px), 0) rotate(calc(var(--shard) * var(--assemble) * 0.55deg));
+  }
+
+  .project-card__summary {
+    transform: translate3d(calc(var(--shard) * var(--assemble) * -4px), calc(var(--shard) * var(--assemble) * 3px), 0) rotate(calc(var(--shard) * var(--assemble) * -0.45deg));
+  }
+
+  .project-card ul {
+    transform: translate3d(calc(var(--shard) * var(--assemble) * 5px), calc(var(--shard) * var(--assemble) * 4px), 0) rotate(calc(var(--shard) * var(--assemble) * 0.6deg));
+  }
+
+  /* Las piezas sueltas no se quedan quietas: cada una flota en su bucle, como las
+     fichas de skills, y por lo mismo va en dos capas. La de fuera (el .__shard, y la
+     propia foto dentro de su celda) hace el bucle; la de dentro guarda el desencaje y
+     el montaje del hover.
+     Recorridos distintos y desfases negativos, igual que en la deriva de skills: las
+     cuatro piezas nunca coinciden en el mismo punto. Acá sí pueden bajar del reposo,
+     que el recorte del card las contiene y no llegan al scroll del panel. */
+  .project-card__shard,
+  .project-card__media>* {
+    animation: shard-float-a 32s ease-in-out infinite;
+  }
+
+  /* > * y no img: el tercio de la card lleva la foto en un proyecto y el reproductor en
+     otro, y los dos son la misma pieza. */
+  .project-card__media>* {
+    animation-name: shard-float-a;
+    animation-duration: 32s;
+    animation-delay: -5s;
+  }
+
+  .project-card__shard--title {
+    animation-name: shard-float-b;
+    animation-duration: 27s;
+    animation-delay: -13s;
+  }
+
+  .project-card__shard--summary {
+    animation-name: shard-float-c;
+    animation-duration: 37s;
+    animation-delay: -8s;
+  }
+
+  .project-card__shard--tags {
+    animation-name: shard-float-d;
+    animation-duration: 30s;
+    animation-delay: -19s;
+  }
+
+  /* Acá había un animation-play-state: paused con el mouse encima. Congelaba la fase para
+     que el aterrizaje saliera derecho, pero al sacar el mouse la animación se reanudaba y
+     eso daba un tirón: Chrome redondea la capa a píxel entero mientras nada se mueve y lo
+     deja de hacer en cuanto hay una animación corriendo, así que el texto se volvía a
+     rasterizar medio píxel más allá. Con el retardo de 260ms la tarjeta estaba quieta
+     justo en ese momento, sin nada que lo tapara: se veía el salto seco y recién después
+     empezaba el desorden.
+     Ahora la animación no se detiene nunca —la capa no cambia de estado y no hay nada que
+     redondear— y la fase la calla --sway, que baja a cero en 240ms. El aterrizaje sale
+     igual de derecho y la salida arranca desde la quietud. */
+}
+
+@keyframes shard-float-a {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  33% {
+    transform: translate3d(calc(var(--float) * var(--sway) * 2.5px), calc(var(--float) * var(--sway) * -2px), 0) rotate(calc(var(--float) * var(--sway) * 0.3deg));
+  }
+
+  66% {
+    transform: translate3d(calc(var(--float) * var(--sway) * -1.5px), calc(var(--float) * var(--sway) * 2.5px), 0) rotate(calc(var(--float) * var(--sway) * -0.25deg));
+  }
+}
+
+@keyframes shard-float-b {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  30% {
+    transform: translate3d(calc(var(--float) * var(--sway) * -3px), calc(var(--float) * var(--sway) * 1.5px), 0) rotate(calc(var(--float) * var(--sway) * -0.3deg));
+  }
+
+  65% {
+    transform: translate3d(calc(var(--float) * var(--sway) * 2px), calc(var(--float) * var(--sway) * -2.5px), 0) rotate(calc(var(--float) * var(--sway) * 0.28deg));
+  }
+}
+
+@keyframes shard-float-c {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  40% {
+    transform: translate3d(calc(var(--float) * var(--sway) * 2px), calc(var(--float) * var(--sway) * 2.5px), 0) rotate(calc(var(--float) * var(--sway) * 0.32deg));
+  }
+
+  75% {
+    transform: translate3d(calc(var(--float) * var(--sway) * -2.5px), calc(var(--float) * var(--sway) * -1.5px), 0) rotate(calc(var(--float) * var(--sway) * -0.22deg));
+  }
+}
+
+@keyframes shard-float-d {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  25% {
+    transform: translate3d(calc(var(--float) * var(--sway) * -2px), calc(var(--float) * var(--sway) * -2.5px), 0) rotate(calc(var(--float) * var(--sway) * -0.28deg));
+  }
+
+  55% {
+    transform: translate3d(calc(var(--float) * var(--sway) * 2.5px), calc(var(--float) * var(--sway) * 1px), 0) rotate(calc(var(--float) * var(--sway) * 0.34deg));
+  }
+
+  80% {
+    transform: translate3d(calc(var(--float) * var(--sway) * 1px), calc(var(--float) * var(--sway) * 2.5px), 0) rotate(calc(var(--float) * var(--sway) * 0.15deg));
+  }
+}
+
 .projects__grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1067,13 +1762,20 @@ a {
 .contact-bubble {
   display: inline-block;
   position: relative;
-  animation: bubble-drift 16s ease-in-out infinite;
+  /* linear acá y el ritmo repartido fotograma por fotograma dentro de los keyframes:
+     un ease-in-out global se aplica a cada tramo por separado, así que el globo frenaba
+     hasta pararse en los cuatro puntos de paso y volvía a arrancar. El tirón se notaba
+     justo al cruzarse los dos, porque el cruce cae a mitad de recorrido, que es donde
+     estaba una de esas paradas. */
+  animation: bubble-drift 18s linear infinite;
 }
 
-/* Distinta duración y desfase para que los dos no se muevan en bloque. */
+/* Misma duración y sin desfase: los dos arrancan en el medio, y el reverse manda a este
+   al lado contrario, así se abren en espejo y vuelven a juntarse en el centro en cada
+   vuelta. Con duraciones distintas el espejo solo valía para la primera pasada: después
+   quedaban en fases sueltas y a ratos se iban los dos para el mismo lado. */
 .contact-intro__line:nth-child(2) .contact-bubble {
-  animation-duration: 20s;
-  animation-delay: -7s;
+  animation-direction: reverse;
 }
 
 .contact-bubble__body {
@@ -1095,26 +1797,39 @@ a {
    mide el contenedor y el translateX negativo mide el globo, así que left 100% con
    translateX -100% deja su borde derecho contra el borde derecho de la línea. El
    bamboleo vertical y el giro viajan en el mismo transform. */
+/* Arranca en el medio (0%) y de ahí se abre a un costado y al otro. Ahora las vueltas
+   caen en 25% y 75%, que son los extremos: ahí frena y vuelve a salir, como un péndulo.
+   El medio —0, 50 y 100%— es punto de paso y se cruza a toda velocidad, así que el tramo
+   que sale del centro desacelera (seno de salida) y el que vuelve acelera (seno de
+   entrada). El par está elegido para que la velocidad coincida en la junta: sin eso se
+   nota el cambio de ritmo justo al pasar por el centro.
+   La altura sigue al péndulo de verdad: el punto bajo es el centro y los extremos quedan
+   levantados, y el giro se inclina hacia el lado al que va. */
 @keyframes bubble-drift {
+
   0%,
   100% {
-    left: 0;
-    transform: translate3d(0, 0, 0) rotate(0deg);
+    animation-timing-function: cubic-bezier(0.5, 1, 0.68, 1);
+    left: 50%;
+    transform: translate3d(-50%, 0, 0) rotate(0deg);
   }
 
   25% {
-    left: 50%;
-    transform: translate3d(-50%, -5px, 0) rotate(0.9deg);
+    animation-timing-function: cubic-bezier(0.32, 0, 0.5, 0);
+    left: 100%;
+    transform: translate3d(-100%, -9px, 0) rotate(1.4deg);
   }
 
   50% {
-    left: 100%;
-    transform: translate3d(-100%, -8px, 0) rotate(0deg);
+    animation-timing-function: cubic-bezier(0.5, 1, 0.68, 1);
+    left: 50%;
+    transform: translate3d(-50%, 0, 0) rotate(0deg);
   }
 
   75% {
-    left: 50%;
-    transform: translate3d(-50%, -4px, 0) rotate(-0.9deg);
+    animation-timing-function: cubic-bezier(0.32, 0, 0.5, 0);
+    left: 0;
+    transform: translate3d(0, -9px, 0) rotate(-1.4deg);
   }
 }
 
@@ -1152,7 +1867,9 @@ a {
 .contact-form textarea {
   width: 100%;
   border: 2px solid var(--border);
-  border-radius: 10px;
+  /* 4px y no 10: sobre una caja de 26px de alto, 10 se comía casi todo el lado corto y
+     el campo salía ovalado. Queda a un pelo del botón de enviar, que va en 3. */
+  border-radius: 4px;
   outline: none;
   color: var(--text);
   background: transparent;
@@ -1254,14 +1971,14 @@ a {
   text-align: left;
 }
 
-.footer > * {
+.footer>* {
   position: relative;
   padding-left: var(--prompt-gutter);
 }
 
 /* Centrado vertical explícito: si no, el "#" se iría al tope de la caja, que en la
    despedida de 36px queda muy arriba. */
-.footer > *::before {
+.footer>*::before {
   content: '#';
   position: absolute;
   top: 50%;
@@ -1340,37 +2057,23 @@ a {
   }
 }
 
-/* En una ventana de escritorio con altura suficiente, toda la composición cabe
-   en el viewport: header y footer permanecen visibles y solo el panel activo
-   administra el contenido que se desborda. En ventanas más bajas se conserva el
-   flujo normal de la página para no recortar la cabecera ni el footer. */
-@media (min-width: 761px) and (min-height: 700px) {
-  html,
-  body,
-  #root {
-    height: 100%;
-    overflow: hidden;
-  }
-
-  .site {
-    height: 100vh;
-    height: 100svh;
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  /* Encoger sí, estirar no: con flex-grow el workspace se comería el hueco libre y
-     empujaría el footer al borde inferior de la ventana, dejando un vacío tras el
-     panel. Así el footer va pegado al contenido y el sobrante queda al final. El
-     shrink se conserva para que en ventanas justas el panel ceda alto en vez de
-     recortar la cabecera o el footer. */
-  .tab-workspace,
-  .tabs-card,
-  .tab-panel {
-    flex: 0 1 auto;
-    min-height: 0;
-  }
+/* Dos cursores parpadeando a la vez desorientan: mientras se escribe en el formulario,
+   el del pie se apaga. Vuelve a su sitio —al final del "> exit"— en cuanto ningún campo
+   tiene el foco. Se apaga con opacity y no quitándolo del flujo para que la línea no
+   cambie de ancho al ir y volver, y el :has() cuelga de .site porque el formulario y el
+   pie son ramas distintas del árbol. */
+.site:has(.contact-form :is(input, textarea):focus) .terminal-caret {
+  opacity: 0;
+  animation: none;
 }
+
+/* Acá vivía un bloque que, en ventanas de escritorio, clavaba la composición al alto del
+   viewport y dejaba que el panel cediera alto para que todo entrara sin scroll. El efecto
+   secundario era que el aire de abajo se iba comiendo a medida que la ventana se achicaba:
+   el panel medía distinto en cada tamaño y el espacio del pie nunca quedaba quieto.
+   Ahora el panel mide siempre lo mismo —los px medidos de skills— y, cuando la ventana no
+   da para todo, scrollea la página. El alto de la ventana ya no cambia nada de la
+   composición: es el mismo dibujo, se vea entero o haya que bajar un poco. */
 
 /* El parpadeo constante es justo lo que molesta con reduced motion: queda fijo. */
 @media (prefers-reduced-motion: reduce) {
@@ -1385,6 +2088,7 @@ a {
 }
 
 @media (max-width: 760px) {
+
   .page-shell,
   .content-column,
   .footer.content-column {
@@ -1392,14 +2096,11 @@ a {
     margin-inline: auto;
   }
 
-  .site-header {
-    --header-top: 36px;
-  }
-
   .hero {
     grid-template-columns: 76px minmax(0, 1fr);
     gap: 16px;
     margin-top: 0;
+    --hero-text-top: 28px;
   }
 
   .hero__profile {
@@ -1411,17 +2112,21 @@ a {
     height: 76px;
   }
 
-  .hero__content {
-    padding-top: 28px;
-  }
-
   .hero-title {
-    font-size: clamp(22px, 5vw, 28px);
+    font-size: clamp(22px, 4.2vw, 28px);
     line-height: 1.15;
   }
 
+  /* El nombre va en otra tipografía y traía su tamaño fijo, así que no bajaba con el
+     resto del título: la segunda línea es nowrap y a 28px mide 493px, contra los 468 de
+     columna que quedan en una ventana de 600. Se salía por el borde. Ahora escala con el
+     mismo clamp que el título y la línea entra en toda la franja. */
+  .hero-title__name {
+    font-size: clamp(22px, 4.2vw, 28px);
+  }
+
   .hero p,
-  .hero p + p {
+  .hero p+p {
     grid-column: 1 / -1;
   }
 
@@ -1471,13 +2176,23 @@ a {
     flex: 0 0 auto;
   }
 
+  /* Acá el panel deja de ser una ventana con scroll propio y toma el alto de su
+     contenido: el que scrollea es la página. Con alto fijo, proyectos metía 840px de
+     tarjetas en una caja de 500 y quedaba un scroll dentro de otro scroll, que en un
+     teléfono es justo lo que se traba —el dedo no sabe cuál de los dos mueve—.
+     Sin barra propia tampoco hace falta el canal reservado ni el padding desparejo que
+     lo compensaba. */
   .tab-panel {
     flex: none;
-    height: clamp(390px, 58svh, 560px);
+    height: auto;
+    padding: 22px 16px 24px;
+    overflow: visible;
+    scrollbar-gutter: auto;
   }
 }
 
 @media (max-width: 560px) {
+
   .page-shell,
   .content-column,
   .footer.content-column {
@@ -1491,19 +2206,19 @@ a {
   .hero {
     display: block;
     text-align: center;
+    --hero-text-top: 18px;
   }
 
   .hero__avatar {
     margin-inline: auto;
   }
 
+  /* Acá la foto va arriba del texto, no al lado: no hay renglón con el que alinearse y
+     el padding solo la despegaría de la cabecera. */
   .hero__profile {
     width: max-content;
     margin-inline: auto;
-  }
-
-  .hero__content {
-    padding-top: 18px;
+    padding-top: 0;
   }
 
   .hero-title__name {
@@ -1512,6 +2227,21 @@ a {
 
   .hero-title__introduction {
     font-size: clamp(18px, 5.2vw, 22px);
+  }
+
+  /* "> mi nombre es Wilson Reátegui" deja de ir clavado en un renglón. Con el nowrap no
+     entraba a ningún ancho de esta franja: la línea queda en ~97% del viewport y la
+     columna da 91%, así que a 320px se salía 32px y a 375px, 11px. Achicar más la
+     tipografía no era opción —acá ya está en su mínimo legible—, así que se parte en dos
+     renglones, que centrados se leen bien.
+     El nombre sí sigue entero: soltando también su quiebre, el corte caía entre "Wilson"
+     y "Reátegui" en vez de después del "es". */
+  .hero-title__identity {
+    white-space: normal;
+  }
+
+  .hero-title__name {
+    white-space: nowrap;
   }
 
   .hero p {
@@ -1555,10 +2285,11 @@ a {
     grid-template-columns: 1fr;
   }
 
-  /* Apilado, la divisoria pasa de vertical a horizontal. */
-  .project-card--solo .project-card__media {
-    border-right: 0;
-    border-bottom: 1px solid var(--border);
+  /* Apilado, la divisoria pasa de vertical a horizontal. Sigue en el contenedor del
+     texto, que es el que no se mueve. */
+  .project-card--solo .project-card__content {
+    border-top: 1px solid var(--border);
+    border-left: 0;
   }
 
   .project-card.media-right .project-card__media,
@@ -1596,6 +2327,7 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

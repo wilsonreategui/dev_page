@@ -23,19 +23,48 @@ const skillsByLanguage = {
 
 const projects = [
   {
+    name: 'sonivium',
+    audio: {
+      src: '/assets/complex.wav',
+      // Picos reales del wav, medidos una vez y guardados acá. Dibujar la onda en vivo
+      // obligaría a bajar el archivo entero al cargar la página; así el audio recién se
+      // descarga cuando alguien le da play y la onda ya está dibujada desde el inicio.
+      peaks: [
+        0.68, 0.75, 0.61, 0.64, 0.73, 0.6, 0.69, 0.66, 0.65, 0.5,
+        0.51, 0.5, 0.47, 0.4, 0.38, 0.37, 0.29, 0.28, 0.37, 0.2,
+        0.27, 0.24, 0.29, 0.3, 0.46, 0.45, 0.61, 0.47, 0.55, 0.65,
+        0.65, 0.59, 0.65, 0.88, 0.69, 0.84, 0.85, 0.72, 1, 0.68,
+      ],
+    },
+    summary: {
+      es: 'sonificación con datos solares: información en formato FITS, convertidas en sonido con python.',
+      en: 'solar data sonification: jsoc series in fits format, from the hmi instrument, turned into sound with python.',
+    },
+    tags: ['python', 'jsoc', 'fits', 'hmi', 'audio', 'wav'],
+    layout: 'project-card--solo',
+  },
+  {
     name: 'personal web',
     url: 'https://wilsonreategui.com',
     // Si el archivo no existe todavía, el bloque cae al color sólido de --media.
     image: '/assets/personal-web.png',
     summary: {
-      es: 'construido a mano. sin frameworks, sin build. routing, caché y persistencia hechos desde cero.',
+      es: 'construido a mano. sin frameworks, sin build. routing, caché y persistencia hechos desde cero. Estilo Retro Terminal.',
       en: 'personal site with no framework or build. hand-rolled router with fetch and caching, persistent theme, terminal effects.',
     },
     // El "> " del prompt no va en el dato: desalinea la columna. Lo pone el css.
-    tags: ['html', 'css', 'javascript', 'es modules', 'fetch api', 'svg', 'localstorage', 'github pages'],
+    tags: ['html', 'css', 'javascript', 'svg', 'localstorage', 'github pages'],
     layout: 'project-card--solo',
   },
 ]
+
+// Recortada y reescalada a 360px desde la foto original: a 94px de pantalla es
+// resolución de sobra incluso en retina, y evita mandar los 4.7MB del jpg de cámara.
+const profilePhoto = '/assets/perfil-2.jpg'
+
+// Cada hover elige uno de estos al azar y lo escribe en el marco de la foto; el css
+// tiene una regla por nombre. Son todos de una sola propiedad para que no se peleen.
+const avatarHoverEffects = ['zoom', 'tilt', 'sway', 'pop', 'tone']
 
 const socialNetworks = [
   { name: 'mail', asset: 'email', label: 'wreategui17@gmail.com', copy: 'wreategui17@gmail.com', width: 25 },
@@ -52,18 +81,18 @@ const copy = {
     languageLabel: 'seleccionar idioma',
     artLink: 'arte',
     artLinkLabel: 'visitar Wilson Reátegui arte',
-    avatarAlt: 'ilustración de perfil',
+    avatarAlt: 'foto de perfil de Wilson Reátegui',
     greeting: '> hola!',
     introduction: '> mi nombre es',
     introBefore: '# ',
     introHighlight: 'programador senior',
-    introAfter: ' que vive en Lima, Perú.',
-    workBefore: '# actualmente trabajo como analista de sistemas en ',
+    introAfter: ' que vive en Lima, Perú',
+    workBefore: '# llevo trabajando 4 años como analista de sistemas en ',
     workHighlight: 'Total Servicios Financieros',
-    workAfter: ', una empresa dedicada a la banca de productos como leasing y factoring.',
+    workAfter: ', una empresa dedicada a la banca de productos como leasing y factoring',
     specialtyBefore: '# me especializo en el ',
     specialtyHighlight: 'diseño, desarrollo y gestión de software',
-    specialtyAfter: ', utilizando tecnologías modernas y minimalistas, siguiendo buenas prácticas de desarrollo para crear proyectos eficientes y escalables.',
+    specialtyAfter: ', utilizando tecnologías modernas y minimalistas, siguiendo buenas prácticas de desarrollo para crear proyectos eficientes y escalables',
     tabs: { skills: 'skills', projects: 'proyectos', contact: 'contacto' },
     contactBefore: 'Si te gusta mi trabajo, ',
     contactHighlight: 'escríbeme.',
@@ -75,10 +104,13 @@ const copy = {
     status: '¡gracias! tu mensaje está listo para ser enviado.',
     socialText: 'también puedes encontrarme por estos medios:',
     // Acá el "#" va en el texto: el css solo lo inyecta en la fila de links.
-    farewell: '> nos vemos pronto!',
+    farewell: '# nos vemos pronto!',
     socialLabel: 'redes sociales',
     copyEmail: 'copiar correo',
     copied: 'copiado!',
+    playAudio: 'reproducir el audio del proyecto',
+    pauseAudio: 'pausar el audio del proyecto',
+    goProject: 'ir',
   },
   en: {
     locale: 'en',
@@ -87,18 +119,18 @@ const copy = {
     languageLabel: 'select language',
     artLink: 'arte',
     artLinkLabel: 'visit Wilson Reátegui art',
-    avatarAlt: 'profile illustration',
+    avatarAlt: 'profile photo of Wilson Reátegui',
     greeting: '> hi!',
     introduction: '> my name is',
     introBefore: '# a ',
     introHighlight: 'senior developer',
-    introAfter: ' based in Lima, Perú.',
+    introAfter: ' based in Lima, Perú',
     workBefore: '# i currently work as a systems analyst at ',
     workHighlight: 'Total Servicios Financieros',
-    workAfter: ', a company focused on financial products such as leasing and factoring.',
+    workAfter: ', a company focused on financial products such as leasing and factoring',
     specialtyBefore: '# i specialize in ',
     specialtyHighlight: 'software design, development, and management',
-    specialtyAfter: ', using modern, minimal technologies and development best practices to create efficient, scalable projects.',
+    specialtyAfter: ', using modern, minimal technologies and development best practices to create efficient, scalable projects',
     tabs: { skills: 'skills', projects: 'projects', contact: 'contact' },
     contactBefore: 'if you like my work, ',
     contactHighlight: 'send me a message.',
@@ -113,6 +145,9 @@ const copy = {
     socialLabel: 'social networks',
     copyEmail: 'copy email',
     copied: 'copied!',
+    playAudio: 'play the project audio',
+    pauseAudio: 'pause the project audio',
+    goProject: 'go',
   },
 }
 
@@ -293,31 +328,188 @@ function Skill({ name, theme, motion }) {
   )
 }
 
-function ProjectCard({ project, language }) {
-  const host = project.url ? new URL(project.url).hostname : null
+// Reproductor propio y no <audio controls>: el nativo mide 200px de ancho como mínimo y
+// no entra en el tercio del card, aparte de que cada navegador lo dibuja a su manera.
+function AudioPreview({ audio, labels }) {
+  const audioRef = useRef(null)
+  const [playing, setPlaying] = useState(false)
+  const [progress, setProgress] = useState(0)
+
+  function toggle() {
+    const element = audioRef.current
+    if (!element) return
+    // El estado no se toca acá: lo mueven onPlay y onPause, así queda igual de fiel si
+    // el audio se detiene solo al terminar o si el navegador rechaza el play.
+    if (element.paused) element.play().catch(() => { })
+    else element.pause()
+  }
+
   return (
-    <article className={`project-card ${project.layout}`}>
-      <div className="project-card__media" aria-hidden="true">
-        {project.image && <img src={project.image} alt="" loading="lazy" />}
+    <div className="audio-preview">
+      <button
+        className="audio-preview__toggle"
+        type="button"
+        onClick={toggle}
+        aria-label={playing ? labels.pauseAudio : labels.playAudio}
+      >
+        {playing ? (
+          <svg viewBox="0 0 18 18" aria-hidden="true">
+            <rect x="4.5" y="3.5" width="3.5" height="11" rx="0.5" />
+            <rect x="10" y="3.5" width="3.5" height="11" rx="0.5" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 18 18" aria-hidden="true">
+            <path d="M5.5 3.4 14.6 9l-9.1 5.6z" />
+          </svg>
+        )}
+      </button>
+
+      {/* Decorativa: el progreso audible ya lo lleva el propio audio y el botón anuncia
+          su estado, así que para un lector de pantalla esto es ruido. */}
+      <div className="audio-preview__wave" aria-hidden="true">
+        {audio.peaks.map((peak, index) => (
+          <span
+            key={index}
+            className="audio-preview__bar"
+            data-played={index / audio.peaks.length < progress}
+            // Piso de 12%: los tramos callados igual dejan su marca y la onda no se corta.
+            style={{ height: `${Math.max(12, Math.round(peak * 100))}%` }}
+          />
+        ))}
       </div>
+
+      <audio
+        ref={audioRef}
+        src={audio.src}
+        preload="metadata"
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onEnded={() => {
+          setPlaying(false)
+          setProgress(0)
+        }}
+        onTimeUpdate={(event) => {
+          const { currentTime, duration } = event.currentTarget
+          setProgress(duration ? currentTime / duration : 0)
+        }}
+      />
+    </div>
+  )
+}
+
+function ProjectCard({ project, language, labels }) {
+  const host = project.url ? new URL(project.url).hostname : null
+  const cardRef = useRef(null)
+
+  // Los bucles arrancan con la página y no vuelven a empezar nunca: sin esto, al soltar
+  // la tarjeta cada pieza sigue desde donde quedó —a la media hora de sesión eso es una
+  // fase cualquiera— y el desorden se ve como un reacomodo hacia un sitio distinto en vez
+  // de la misma animación de cuando se abre la pestaña.
+  // currentTime = 0 es el arranque real de cada pieza, retardo negativo incluido, que es
+  // el desfase que las mantiene sin coincidir. Medido: no mete ningún salto, porque en ese
+  // momento --sway —la amplitud de los bucles— está en 0, así que la fase no se ve.
+  const restartDrift = () => {
+    cardRef.current?.getAnimations({ subtree: true }).forEach((animation) => {
+      if (animation.animationName?.startsWith('shard-float')) animation.currentTime = 0
+    })
+  }
+
+  // Las piezas tienen que salir siempre desde el mismo sitio exacto: el centro. Si el
+  // mouse se va antes de que el montaje termine, --assemble está a media interpolación y
+  // soltarlas ahí las manda a desordenarse desde una pose distinta en cada pasada.
+  // data-settling deja la tarjeta montándose aunque el mouse ya no esté, y el desorden
+  // arranca recién cuando --assemble tocó el 0.
+  const release = () => {
+    const card = cardRef.current
+    if (!card) return
+    const piece = card.querySelector('.project-card__shard')
+    const assemble = Number.parseFloat(getComputedStyle(piece).getPropertyValue('--assemble'))
+    if (assemble > 0.001) {
+      card.dataset.settling = 'true'
+      return
+    }
+    restartDrift()
+  }
+
+  return (
+    <article
+      ref={cardRef}
+      className={`project-card ${project.layout}`}
+      onPointerLeave={release}
+      // El montaje también responde al foco de teclado, así que el desorden va con él:
+      // relatedTarget es a dónde se fue el foco, y solo cuenta si salió de la tarjeta.
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) release()
+      }}
+      // Las cuatro piezas terminan a la vez, así que la primera que avisa vale por todas.
+      // Al quitar el atributo, --assemble sale de 0 y ese es el desorden.
+      onTransitionEnd={(event) => {
+        const card = cardRef.current
+        if (event.propertyName !== '--assemble' || card?.dataset.settling !== 'true') return
+        delete card.dataset.settling
+        restartDrift()
+      }}
+    >
+      {/* Sin aria-hidden cuando lleva audio: adentro hay un botón, y esconderlo del
+          árbol de accesibilidad dejaría un control enfocable que no se anuncia. */}
+      <div className="project-card__media" aria-hidden={project.audio ? undefined : true}>
+        {project.audio ? (
+          <AudioPreview audio={project.audio} labels={labels} />
+        ) : (
+          project.image && <img src={project.image} alt="" loading="lazy" />
+        )}
+        {/* Atajo visual sobre la foto. Fuera del tab y dentro de una caja aria-hidden a
+            propósito: lleva a la misma url que el título, así que por teclado y por
+            lector de pantalla el camino sigue siendo el enlace del título en vez de
+            toparse dos veces con el mismo destino. */}
+        {project.url && project.image && (
+          <a
+            className="project-card__go"
+            href={project.url}
+            target="_blank"
+            rel="noreferrer"
+            tabIndex={-1}
+            aria-label={labels.goProject}
+          >
+            <span className="project-card__go-label">
+              <svg className="project-card__go-icon" viewBox="0 0 18 18" aria-hidden="true">
+                <path d="M11 3.6h3.4V7" />
+                <path d="M14.4 3.6 9 9" />
+                <path d="M12.6 10.4v3.9H3.7V5.4h3.9" />
+              </svg>
+            </span>
+          </a>
+        )}
+      </div>
+      {/* Cada pieza va envuelta en su propia capa: la de fuera flota en bucle y la de
+          dentro guarda el desencaje que el hover deshace. Con las dos cosas en el mismo
+          transform la animación le ganaría a la propiedad y no habría montaje. */}
       <div className="project-card__content">
-        <h3>
-          <span className="project-card__prompt" aria-hidden="true">&gt;</span>
-          {project.url ? (
-            <a href={project.url} target="_blank" rel="noreferrer">
+        <div className="project-card__shard project-card__shard--title">
+          <h3>
+            <span className="project-card__prompt" aria-hidden="true">&gt;</span>
+            {project.url ? (
+              <a href={project.url} target="_blank" rel="noreferrer">
+                <span className="project-card__name">{project.name}</span>
+                <span className="project-card__host">({host})</span>
+              </a>
+            ) : (
               <span className="project-card__name">{project.name}</span>
-              <span className="project-card__host">({host})</span>
-            </a>
-          ) : (
-            <span className="project-card__name">{project.name}</span>
-          )}
-        </h3>
-        {project.summary && <p className="project-card__summary">{project.summary[language]}</p>}
-        <ul>
-          {project.tags.map((tag) => (
-            <li key={tag}>{tag}</li>
-          ))}
-        </ul>
+            )}
+          </h3>
+        </div>
+        {project.summary && (
+          <div className="project-card__shard project-card__shard--summary">
+            <p className="project-card__summary">{project.summary[language]}</p>
+          </div>
+        )}
+        <div className="project-card__shard project-card__shard--tags">
+          <ul>
+            {project.tags.map((tag) => (
+              <li key={tag}>{tag}</li>
+            ))}
+          </ul>
+        </div>
       </div>
     </article>
   )
@@ -331,6 +523,7 @@ function App() {
   })
   const [language, setLanguage] = useState(() => window.localStorage.getItem('portfolio-language') || 'es')
   const [activeTab, setActiveTab] = useState('skills')
+  const [avatarEffect, setAvatarEffect] = useState(null)
   const [formStatus, setFormStatus] = useState('')
   const [languageOpen, setLanguageOpen] = useState(false)
   const tabPanelRef = useRef(null)
@@ -472,7 +665,22 @@ function App() {
 
         <div className="hero">
           <aside className="hero__profile">
-            <img className="hero__avatar" src={assetPath('avatar', theme)} alt={labels.avatarAlt} />
+            {/* El efecto se sortea al entrar el puntero y se borra al salir: limpiarlo es
+                lo que deja que la animación vuelva a correr en el siguiente hover, y el
+                filter descarta el actual para que dos pasadas seguidas no repitan. */}
+            <div
+              className="hero__avatar"
+              data-hover-effect={avatarEffect ?? undefined}
+              onPointerEnter={() =>
+                setAvatarEffect((current) => {
+                  const options = avatarHoverEffects.filter((effect) => effect !== current)
+                  return options[Math.floor(Math.random() * options.length)]
+                })
+              }
+              onPointerLeave={() => setAvatarEffect(null)}
+            >
+              <img className="hero__photo" src={profilePhoto} alt={labels.avatarAlt} />
+            </div>
           </aside>
 
           <div className="hero__content">
@@ -516,15 +724,17 @@ function App() {
               <div className="skills" role="list">
                 {skillRows.map((row, rowIndex) => (
                   <div className={`skills__row skills__row--${row.length === 1 ? 'single' : 'pair'}`} key={rowIndex} role="presentation">
-                    {row.map((skill, skillIndex) => (
-                      <div role="listitem" key={skill}>
-                        <Skill
-                          name={skill}
-                          theme={theme}
-                          motion={skillRows.slice(0, rowIndex).flat().length + skillIndex + 1}
-                        />
-                      </div>
-                    ))}
+                    {row.map((skill, skillIndex) => {
+                      // Posición dentro de la rejilla, no dentro de la fila: con ella el css
+                      // le da a cada ficha su propio motivo de hover y su propia deriva, así
+                      // que ninguna repite el movimiento de otra.
+                      const position = skillRows.slice(0, rowIndex).flat().length + skillIndex + 1
+                      return (
+                        <div className={`skill-slot skill-slot--${position}`} role="listitem" key={skill}>
+                          <Skill name={skill} theme={theme} motion={position} />
+                        </div>
+                      )
+                    })}
                   </div>
                 ))}
               </div>
@@ -533,7 +743,7 @@ function App() {
             {activeTab === 'projects' && (
               <div className="projects">
                 {projects.map((project) => (
-                  <ProjectCard key={project.name} project={project} language={language} />
+                  <ProjectCard key={project.name} project={project} language={language} labels={labels} />
                 ))}
               </div>
             )}
@@ -582,7 +792,7 @@ function App() {
         <p className="footer-exit">
           {/* Como string de JS: un ">" suelto en el texto de JSX dispara
               react/no-unescaped-entities. */}
-          {'> exit'}
+          {'# exit'}
           <span className="terminal-caret" aria-hidden="true" />
         </p>
       </footer>
