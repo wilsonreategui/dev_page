@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
+const publicAsset = (path) => `${import.meta.env.BASE_URL}assets/${path}`
+
 const skillsByLanguage = {
   es: [
     ['c#'],
@@ -25,7 +27,7 @@ const projects = [
   {
     name: 'sonivium',
     audio: {
-      src: '/assets/complex.wav',
+      src: publicAsset('complex.wav'),
       // Picos reales del wav, medidos una vez y guardados acá. Dibujar la onda en vivo
       // obligaría a bajar el archivo entero al cargar la página; así el audio recién se
       // descarga cuando alguien le da play y la onda ya está dibujada desde el inicio.
@@ -47,7 +49,7 @@ const projects = [
     name: 'personal web',
     url: 'https://wilsonreategui.com',
     // Si el archivo no existe todavía, el bloque cae al color sólido de --media.
-    image: '/assets/personal-web.png',
+    image: publicAsset('personal-web.png'),
     summary: {
       es: 'construido a mano. sin frameworks, sin build. routing, caché y persistencia hechos desde cero. Estilo Retro Terminal.',
       en: 'personal site with no framework or build. hand-rolled router with fetch and caching, persistent theme, terminal effects.',
@@ -60,7 +62,7 @@ const projects = [
 
 // Recortada y reescalada a 360px desde la foto original: a 94px de pantalla es
 // resolución de sobra incluso en retina, y evita mandar los 4.7MB del jpg de cámara.
-const profilePhoto = '/assets/perfil-2.jpg'
+const profilePhoto = publicAsset('perfil-2.jpg')
 
 // Cada hover elige uno de estos al azar y lo escribe en el marco de la foto; el css
 // tiene una regla por nombre. Son todos de una sola propiedad para que no se peleen.
@@ -168,7 +170,7 @@ const languageOptions = [
 ]
 
 function assetPath(name, theme) {
-  return `/assets/${name}-${theme}.svg`
+  return publicAsset(`${name}-${theme}.svg`)
 }
 
 // Banderas simplificadas e inline: los emoji de bandera no se renderizan en Windows,

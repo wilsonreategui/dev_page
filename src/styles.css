@@ -122,9 +122,13 @@ a {
      leen esta variable para bajar juntos. En 0 la página arranca pegada al borde de
      arriba; subir este número es lo único que hace falta para devolverle aire. */
   --header-top: 30px;
+  /* Lo que el contenido baja por debajo de la botonera. La botonera no lo lee —es
+     absoluta y se queda en --header-top—, así que este número es solo el aire entre
+     la fila de botones y lo que viene abajo: foto, titular y párrafos. */
+  --header-gap: 10px;
   position: relative;
   flex: 0 0 auto;
-  padding-top: var(--header-top);
+  padding-top: calc(var(--header-top) + var(--header-gap));
 }
 
 .sr-only {
@@ -799,12 +803,13 @@ a {
      inglés, así que el par entero entra en los dos idiomas. De la tercera en adelante ya
      no se pide más alto: caen debajo y el panel las pasa a su scroll.
 
-     Resta 534px — todo lo que no es el panel. 400 por encima (cabecera, hero y la fila de
+     Resta 544px — todo lo que no es el panel. 410 por encima (cabecera, hero y la fila de
      pestañas, medidos en español, que es el idioma que deja el hero 20px más alto; en
-     inglés sobra ese pelo más) y 134 del pie. Así el panel toma el hueco justo que queda
-     sin empujar la página a scrollear: el máximo llega a partir de una ventana de 997px
-     de alto y el mínimo se toca por debajo de 889px. */
-  height: clamp(355px, calc(100vh - 534px), 463px);
+     inglés sobra ese pelo más) y 134 del pie. Los 10 que separan la botonera del
+     contenido —--header-gap— van dentro de esos 410. Así el panel toma el hueco justo
+     que queda sin empujar la página a scrollear: el máximo llega a partir de una ventana
+     de 1007px de alto y el mínimo se toca por debajo de 899px. */
+  height: clamp(355px, calc(100vh - 544px), 463px);
   min-height: 0;
   /* Parejo a los dos lados. Antes la derecha iba en 8px para compensar el canal de 24px
      que la barra tenía reservado siempre; sin ese canal, esos 8px dejaban el contenido
@@ -2323,7 +2328,7 @@ a {
   /* La botonera es absoluta: sin este hueco, la foto —que acá vuelve al centro— le
      pasaría por debajo en vez de quedar debajo. */
   .site-header {
-    padding-top: calc(var(--header-top) + var(--control-size) + 10px);
+    padding-top: calc(var(--header-top) + var(--control-size) + var(--header-gap));
   }
 
   /* La foto y sus dos renglones, centrados. Solo el titular: los párrafos conservan su
