@@ -520,6 +520,20 @@ a {
   gap: 7px;
 }
 
+/* Las dos mitades vienen partidas del jsx; acá se decide si se leen como un solo
+   renglón. Con contents la caja de la fila desaparece del layout y sus chips pasan a ser
+   hijos directos del nav, así que los cuatro se alinean seguidos como si nunca hubiera
+   habido filas. */
+.social-links__row {
+  display: contents;
+}
+
+/* Y entonces sobra el "#" de la segunda mitad, que quedaría plantado en medio de la
+   fila. Vuelve a aparecer abajo, cuando las dos filas se separan de verdad. */
+.social-links__row:not(:first-child) .social-links__prompt {
+  display: none;
+}
+
 /* Sin desplazamiento: la posición la resuelve sola la alineación por línea base. */
 .social-links__prompt {
   font-size: 14px;
@@ -770,16 +784,18 @@ a {
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
-  /* Altura única: los 379px que mide skills con sus 9 arcos a separación natural.
+  /* Altura única: los 343px que mide skills con sus 9 arcos a separación natural.
      Es a la vez mínimo y máximo, así que las tres pestañas rellenan ese alto y
      ninguna se estira de más. Si algo no cabe, el panel tiene su scroll.
-     El número es medido: incluye el padding del panel y el de skills, así que si se
-     toca cualquiera de esos hay que recalcularlo soltando la altura del panel. */
-  height: 379px;
+     El número es medido y sale de una suma: 2 de borde + 18 y 12 de este padding +
+     10, 297 y 4 de la rejilla de skills. Si se toca cualquiera de esos hay que
+     rehacer la cuenta, o el alto sobrante se le va a repartir a las filas —skills
+     rellena el panel con space-between— y el hueco reaparece entre los arcos. */
+  height: 343px;
   min-height: 0;
   /* El padding derecho es menor porque la barra aporta su propio aire: la suma
      con el canal de 24px deja el mismo ancho de contenido que antes. */
-  padding: 30px 8px 20px 17px;
+  padding: 18px 8px 12px 17px;
   border: 1px solid var(--panel-border);
   border-radius: 0 12px 12px 12px;
   background: transparent;
@@ -820,9 +836,9 @@ a {
 
 /* Solo la pestaña de proyectos entra más arriba: las tarjetas ya traen su propio marco,
    así que el aire de arriba del panel las separaba de las pestañas de más y rompía la
-   lectura de lista. Skills y contacto conservan los 30px, que ahí sí hacen falta. */
+   lectura de lista. Skills y contacto conservan los 18px, que ahí sí hacen falta. */
 .tabs-card[data-active-tab='projects'] .tab-panel {
-  padding-top: 25px;
+  padding-top: 13px;
 }
 
 .tab-panel>.contact-panel {
@@ -872,18 +888,27 @@ a {
   display: none;
 }
 
+/* Rejilla declarada y no deducida del ancho. Con flex-wrap el número de fichas por
+   renglón salía de dividir el ancho disponible entre el ancho de la ficha, así que
+   cambiaba solo a mitad de tramo y, como la ficha encogía en cada corte, la página
+   pasaba de 3 por fila en escritorio a 4 en tablet: al revés de lo que toca. Acá el
+   número lo decide el css, y bajarlo a 2 es un corte explícito más abajo.
+   100% y no 580px: la caja útil del panel mide 572px en escritorio —623 menos el
+   borde, el padding y el canal de la barra—, así que los 580 fijos se salían 8px y
+   el recorte del panel se los comía. */
 .skills {
-  display: flex;
-  flex-wrap: wrap;
-  /* space-between y no flex-start: las filas se reparten el alto disponible en vez
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* space-between y no start: las filas se reparten el alto disponible en vez
      de amontonarse arriba dejando el hueco abajo. */
   align-content: space-between;
-  justify-content: space-evenly;
   row-gap: 18px;
-  width: 580px;
+  column-gap: 8px;
+  width: 100%;
+  max-width: 580px;
   /* padding y no margin: al rellenar el panel, el margen se comería alto del propio
      bloque y las filas tendrían menos sitio para repartirse. */
-  padding-block: 22px 8px;
+  padding-block: 10px 4px;
   margin: 0 auto;
 }
 
@@ -902,8 +927,14 @@ a {
   --arc-scale: 1.03;
   --arc-skew: 0deg;
   position: relative;
-  width: 154px;
-  height: 87px;
+  /* La ficha ya no mide 154x87 clavados: mide lo que le deje su celda, con ese tamaño
+     como techo y con la proporción del diseño atada. Con el alto colgando del ancho,
+     el arco y el rótulo —que van en porcentaje— encogen a la par y el rótulo nunca se
+     descuelga del arco, sea cual sea el ancho de la celda. */
+  width: 100%;
+  max-width: 154px;
+  aspect-ratio: 154 / 87;
+  margin-inline: auto;
   text-align: center;
   cursor: default;
   transform-origin: 50% 72%;
@@ -912,8 +943,11 @@ a {
 
 .skill-arc {
   display: block;
-  width: 130px;
-  height: 65px;
+  /* 130/154. El alto sale de la proporción del propio viewBox, que es 2:1, así que
+     el arco conserva su forma a cualquier tamaño de ficha. */
+  width: 84.42%;
+  height: auto;
+  aspect-ratio: 2 / 1;
   margin-inline: auto;
   fill: none;
   color: var(--nav-text);
@@ -925,9 +959,12 @@ a {
   transition: color 180ms ease, transform 280ms cubic-bezier(0.2, 0.85, 0.25, 1.15);
 }
 
+/* 55/87: el mismo renglón del diseño, ahora colgado del alto de la ficha en vez de
+   clavado en píxeles. Si fuera fijo, al encoger la ficha el rótulo se quedaría donde
+   estaba y acabaría por debajo del arco. */
 .skill-item span {
   position: absolute;
-  top: 55px;
+  top: 63.22%;
   right: 0;
   left: 0;
   padding-inline: 8px;
@@ -935,10 +972,11 @@ a {
   line-height: 1.2;
 }
 
+/* 104/154, por lo mismo. */
 .skill-item--long span {
   right: auto;
   left: 50%;
-  width: 104px;
+  width: 67.53%;
   padding-inline: 0;
   font-size: 9px;
   transform: translateX(-50%);
@@ -1155,7 +1193,7 @@ a {
   width: 100%;
   /* Arriba sin aire propio: la primera tarjeta arranca contra el padding del panel, y
      el gap deja respirar a las siguientes sin que la pila deje de leerse como lista. */
-  padding-block: 0 20px;
+  padding-block: 0 12px;
   margin: 0 auto;
 }
 
@@ -1388,32 +1426,51 @@ a {
 }
 
 .project-card h3 {
+  position: relative;
   margin: 0 0 12px;
+  padding-left: var(--prompt-gutter);
   font-size: 18px;
   line-height: 1;
 }
 
-/* Inline-block de ancho fijo: alinea por línea base y deja el texto en la columna. */
+/* Absoluto y no en flujo, por lo mismo que el del resumen: cuando el título pasa a dos
+   renglones, el segundo tiene que caer detrás del ">" y no debajo de él. */
 .project-card__prompt {
-  display: inline-block;
-  width: var(--prompt-gutter);
+  position: absolute;
+  left: 0;
   font-size: 11px;
   font-weight: 400;
 }
 
+/* Nombre y dominio como dos piezas de una fila que envuelve, y no como texto corrido.
+   En el jsx los dos span van pegados, sin un espacio entre medio, así que para el
+   navegador no hay ningún punto de corte entre ellos: la única oportunidad que
+   encontraba estaba dentro del propio nombre, y por eso partía "personal web" por la
+   mitad y arrastraba el dominio detrás. Repartidos en dos piezas, el corte cae donde
+   tiene que caer —entre las dos— y el dominio baja entero al renglón de abajo.
+   inline-flex y no flex: así la caja mide lo que mide el texto y el enlace no se
+   vuelve clicable a lo ancho de toda la tarjeta.
+   El row-gap es el aire entre los dos renglones: con line-height 1 quedaban pegados,
+   y no se puede subir el interlineado sin mover también el título de una sola línea. */
 .project-card h3 a {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 7px;
+  row-gap: 5px;
   color: inherit;
   text-decoration: none;
   transition: color 150ms ease;
 }
 
+/* El nombre no se parte nunca: es la pieza que tiene que quedar entera. */
 .project-card__name {
+  white-space: nowrap;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .project-card__host {
-  margin-left: 7px;
   font-size: 10px;
   font-weight: 400;
 }
@@ -1637,6 +1694,56 @@ a {
   }
 }
 
+/* La otra mitad del trato. Sin hover no hay gesto con el que armar la tarjeta, así que
+   el desencaje se queda fuera —se vería rota para siempre— y el bloque de arriba no
+   aplica: la tarjeta salía entera y completamente quieta.
+   Lo que sí puede correr sin depender de ningún gesto es la deriva. Va solo en el texto
+   —título, resumen y tags—, que es lo que se lee, y es giro puro sobre el propio eje,
+   sin traslación, como las fichas de skills.
+   Recorrido propio y no el de allá arriba: aquel está medido para ir por debajo del
+   desencaje, que es el que se lleva la mirada, y son ±1.8px en el borde del resumen.
+   Suelto, sin nada que lo acompañe, no se ve. Este dobla el arco y alarga el ciclo: el
+   mismo gesto, pero lento y visible.
+   Un solo recorrido para las tres piezas, y lo único que cambia es la duración: arrancan
+   juntas desde el reposo y se van separando solas, sin retardos ni rebotes.
+   Va en la capa de fuera, el .__shard, y no en el h3 ni en el párrafo: es el mismo
+   reparto de una capa por trabajo que usa el hover, y así el día que el texto necesite
+   una transición propia no se pelea con la animación. */
+@media (hover: none) and (prefers-reduced-motion: no-preference) {
+  .projects .project-card__shard {
+    transform-origin: center;
+    animation: card-text-drift 13s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  .projects .project-card__shard--title {
+    animation-duration: 11s;
+  }
+
+  .projects .project-card__shard--tags {
+    animation-duration: 12s;
+  }
+}
+
+/* Números literales, por lo mismo que los de arriba: una var() en el fotograma obliga al
+   navegador a recalcular la animación en el hilo principal, y en cada mudanza el texto se
+   vuelve a rasterizar medio píxel corrido. Graduar el efecto se hace acá. */
+@keyframes card-text-drift {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  33% {
+    transform: translate3d(0, 0, 0) rotate(1.9deg);
+  }
+
+  66% {
+    transform: translate3d(0, 0, 0) rotate(-1.6deg);
+  }
+}
+
 /* Los cuatro recorridos de la deriva. Números literales a propósito: ver la nota de
    arriba, y por eso graduar la deriva se hace acá y no desde una variable. Ya no hay
    traslación: cada objeto permanece en su sitio y solo gira suavemente sobre su propio
@@ -1847,7 +1954,10 @@ a {
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: auto minmax(44px, 1fr) auto auto;
   gap: 10px 40px;
-  width: 580px;
+  /* 100% con tope y no 580px clavados: igual que la rejilla de skills, los 580 fijos
+     se salían 8px de la caja útil del panel y el recorte se los comía. */
+  width: 100%;
+  max-width: 580px;
   min-height: 0;
   margin: 14px auto 0;
 }
@@ -2082,165 +2192,211 @@ a {
   outline-offset: 3px;
 }
 
-@media (max-width: 760px) {
+/* ===========================================================================
+   RESPONSIVE
 
+   Cuatro cortes, y ninguno es un número redondo elegido a ojo: cada uno es el
+   ancho exacto en el que una pieza concreta del diseño deja de caber.
+
+   920px — el corte de la FOTO, que es el que manda. La foto no vive dentro de la
+   columna: cuelga 20px a la izquierda del shell. El shell está topado en 836px y
+   centrado, así que su borde izquierdo cae en (100vw - 836) / 2 y la foto arranca
+   20px antes. Por debajo de 892px esa cuenta se vuelve negativa y el círculo se
+   corta contra el borde de la ventana; con un margen de holgura, 920. Es también
+   donde se rompía la otra mitad del dibujo: en escritorio el texto del hero alinea
+   con el panel porque un shell de 836 deja exactamente 94+12 a la izquierda de una
+   columna de 623, y en cuanto el shell empieza a encoger esa igualdad se pierde
+   —el texto llegó a irse 45px a la derecha del panel—. Acá el ancho ya corta el
+   espacio: la foto sube al tope y todo pasa a una sola columna hacia abajo.
+
+   560px — el corte del TITULAR. "> mi nombre es Wilson Reátegui" va en un solo
+   renglón, y ya en su tamaño mínimo legible mide ~385px: más de lo que da la
+   columna. Acá se parte en dos y el hero entero se centra, que es como se lee un
+   bloque angosto. Es también donde el tercio de la tarjeta de proyecto deja de
+   dar para una captura mirable, así que las tarjetas se apilan.
+
+   480px — el corte de las SKILLS. Tres arcos por fila necesitan unos 135px de
+   celda para que "modelado y diseño de procesos" entre sin pisar la fila de
+   abajo, y la celda sale de la caja útil del panel, no del viewport:
+   (columna - 38) / 3. Con la columna topada en 480, ese cociente cruza los 135
+   justo acá. Debajo, la rejilla pasa a dos columnas.
+
+   380px — el corte de las PESTAÑAS. Tres botones con su icono en una fila; por
+   debajo de este ancho hay que bajarles un punto la tipografía para que no se
+   toquen entre sí.
+   =========================================================================== */
+
+/* --- La foto arriba: una sola columna de acá hacia abajo --------------------- */
+@media (max-width: 920px) {
+
+  /* Cabecera, hero, panel y pie miden lo mismo y arrancan en el mismo píxel. Con
+     un ancho único la alineación deja de depender de la ventana, que es lo que la
+     rompía en la franja intermedia. */
   .page-shell,
   .content-column,
   .footer.content-column {
-    width: min(calc(100% - 40px), 580px);
+    width: min(calc(100% - 40px), 623px);
+    /* margin-inline y no margin-left: .content-column trae un margen calculado
+       desde el 50% del viewport que hay que anular entero. */
     margin-inline: auto;
   }
 
+  /* La botonera es absoluta y colgaba del ancho de las dos columnas del hero.
+     Ahora el shell ya es la columna, así que su borde derecho es el de la columna. */
+  .profile-controls {
+    right: 0;
+  }
+
+  /* Sin rejilla de dos columnas se caen los dos desplazamientos que ataban la foto
+     al texto: el que la sacaba hacia la izquierda para darle aire y el que la subía
+     para calzar con el renglón del "> hola!". Ya no hay renglón con el que alinearse. */
   .hero {
-    grid-template-columns: 76px minmax(0, 1fr);
-    gap: 16px;
-    margin-top: 0;
-    --hero-text-top: 28px;
+    display: block;
+    --hero-text-top: 24px;
   }
 
   .hero__profile {
-    margin-left: -8px;
+    align-items: flex-start;
+    width: max-content;
+    margin-left: 0;
+    padding-top: 0;
   }
 
-  .hero__avatar {
-    width: 76px;
-    height: 76px;
+  /* El tope de 623 lo pone ahora la columna, no el párrafo. */
+  .hero p {
+    max-width: none;
   }
 
+  /* Solo el titular. El nombre queda fuera del reparto a propósito: se mantiene en su
+     tamaño de escritorio en toda la franja, que es lo que lo deja destacando por encima
+     del resto. Entra: en Tourney a 28px mide 241px y la columna más angosta da 296. */
   .hero-title {
-    font-size: clamp(22px, 4.2vw, 28px);
-    line-height: 1.15;
-  }
-
-  /* El nombre va en otra tipografía y traía su tamaño fijo, así que no bajaba con el
-     resto del título: la segunda línea es nowrap y a 28px mide 493px, contra los 468 de
-     columna que quedan en una ventana de 600. Se salía por el borde. Ahora escala con el
-     mismo clamp que el título y la línea entra en toda la franja. */
-  .hero-title__name {
-    font-size: clamp(22px, 4.2vw, 28px);
-  }
-
-  .hero p,
-  .hero p+p {
-    grid-column: 1 / -1;
-  }
-
-  .skills,
-  .projects,
-  .contact-form {
-    width: 100%;
-  }
-
-  .skill-item {
-    width: 128px;
-    height: 73px;
-  }
-
-  .skill-arc {
-    width: 110px;
-    height: 55px;
-  }
-
-  .skill-item span {
-    top: 46px;
-    font-size: 9px;
-  }
-
-  .skill-item--long span {
-    width: 90px;
-  }
-
-  .projects__grid {
-    gap: 20px;
-  }
-
-  .project-card__content,
-  .project-card.vertical .project-card__content {
-    padding: 20px;
-  }
-
-  .project-card ul {
-    column-gap: 18px;
-  }
-
-  .tab-workspace {
-    flex: 0 0 auto;
-  }
-
-  .tabs-card {
-    flex: 0 0 auto;
+    font-size: clamp(24px, 3.3vw, 28px);
   }
 
   /* Acá el panel deja de ser una ventana con scroll propio y toma el alto de su
      contenido: el que scrollea es la página. Con alto fijo, proyectos metía 840px de
-     tarjetas en una caja de 500 y quedaba un scroll dentro de otro scroll, que en un
+     tarjetas en una caja de 343 y quedaba un scroll dentro de otro scroll, que en un
      teléfono es justo lo que se traba —el dedo no sabe cuál de los dos mueve—.
      Sin barra propia tampoco hace falta el canal reservado ni el padding desparejo que
      lo compensaba. */
   .tab-panel {
     flex: none;
     height: auto;
-    padding: 22px 16px 24px;
+    padding: 16px 18px 16px;
     overflow: visible;
     scrollbar-gutter: auto;
   }
 }
 
+/* --- Móvil: el titular se parte y el hero se centra -------------------------- */
 @media (max-width: 560px) {
 
   .page-shell,
   .content-column,
   .footer.content-column {
-    width: min(calc(100% - 32px), 430px);
+    width: min(calc(100% - 32px), 480px);
   }
 
+  /* La botonera es absoluta: sin este hueco, la foto —que acá vuelve al centro— le
+     pasaría por debajo en vez de quedar debajo. */
   .site-header {
     padding-top: calc(var(--header-top) + var(--control-size) + 10px);
   }
 
+  /* La foto y sus dos renglones, centrados. Solo el titular: los párrafos conservan su
+     bandera a la izquierda, que es como se lee un texto largo en una columna angosta. */
   .hero {
-    display: block;
     text-align: center;
     --hero-text-top: 18px;
+  }
+
+  .hero__profile {
+    align-items: center;
+    margin-inline: auto;
   }
 
   .hero__avatar {
     margin-inline: auto;
   }
 
-  /* Acá la foto va arriba del texto, no al lado: no hay renglón con el que alinearse y
-     el padding solo la despegaría de la cabecera. */
-  .hero__profile {
-    width: max-content;
-    margin-inline: auto;
-    padding-top: 0;
+  /* Centrado, el prompt deja de tener a qué agarrarse: no hay margen izquierdo contra
+     el que alinearse ni renglones debajo que sigan la misma columna, así que el "> "
+     queda como un signo suelto delante del texto. Fuera. */
+  .hero-title__prompt {
+    display: none;
   }
 
-  .hero-title__name {
-    font-size: clamp(20px, 6vw, 25px);
+  /* El selector de idioma se va al canto izquierdo de la fila y los dos cuadrados se
+     quedan en el derecho. La botonera es absoluta y hasta acá solo se anclaba por la
+     derecha, así que medía lo que medían los tres botones; con el left: 0 pasa a ocupar
+     la columna entera y ya hay hueco entre medio que repartir. El margin auto se come
+     ese hueco de un lado solo: el idioma queda contra el borde y el par de la derecha
+     conserva su separación de 6px, que es lo que no daría un space-between —repartiría
+     el aire también entre esos dos—. */
+  .profile-controls {
+    left: 0;
   }
 
-  .hero-title__introduction {
-    font-size: clamp(18px, 5.2vw, 22px);
+  .language-select {
+    order: -1;
+    margin-right: auto;
+  }
+
+  .hero p {
+    margin-left: 0;
   }
 
   /* "> mi nombre es Wilson Reátegui" deja de ir clavado en un renglón. Con el nowrap no
      entraba a ningún ancho de esta franja: la línea queda en ~97% del viewport y la
      columna da 91%, así que a 320px se salía 32px y a 375px, 11px. Achicar más la
      tipografía no era opción —acá ya está en su mínimo legible—, así que se parte en dos
-     renglones, que centrados se leen bien.
-     El nombre sí sigue entero: soltando también su quiebre, el corte caía entre "Wilson"
-     y "Reátegui" en vez de después del "es". */
-  .hero-title__identity {
-    white-space: normal;
+     renglones.
+     Pero como fila que envuelve, no como texto corrido: cuando el nombre ya no alcanza,
+     baja de pieza entera a un renglón propio y el row-gap le da los mismos 12px que
+     separan al "hola!" de esta línea, en vez del interlineado pelado —que lo dejaba
+     pegado al renglón de arriba—. Mientras los dos entren, el column-gap hace de espacio
+     normal: vale 0.6em, que es exactamente lo que mide un blanco en JetBrains Mono.
+     El {' '} que hay entre ambos en el jsx no estorba: un flex item de puro blanco no se
+     dibuja. Y el nowrap heredado de la regla base sigue haciendo falta, ahora sobre cada
+     pieza: sin él el corte caía dentro del nombre, entre "Wilson" y "Reátegui".
+     Va por el hijo directo y no por la clase sola porque el display lo pone la regla base
+     con un `.hero-title>span`, que pesa más: estar dentro de un media query no suma
+     especificidad, y sin el `>` acá el bloque se quedaba en display: block. */
+  .hero-title>.hero-title__identity {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: baseline;
+    column-gap: 0.6em;
+    row-gap: 12px;
   }
 
+  /* Centrado y sin el "> " delante, cada renglón arranca como una oración suelta, así que
+     pide mayúscula. Va por ::first-letter y no por el dato en App.jsx porque en escritorio
+     el prompt manda y el texto tiene que seguir en minúscula. El greeting ya es bloque por
+     la regla base; el introduction lo es acá por ser flex item, que es lo que habilita el
+     pseudo-elemento en los dos. */
+  .hero-title__greeting::first-letter,
+  .hero-title__introduction::first-letter {
+    text-transform: uppercase;
+  }
+
+  /* El tamaño va en el titular y no en cada renglón: así el "hola!" y el "mi nombre es"
+     leen siempre el mismo número y no hay manera de que se desemparejen. El nombre no
+     entra en el reparto porque trae el suyo declarado aparte. */
+  .hero-title {
+    font-size: clamp(18px, 5.2vw, 22px);
+  }
+
+  /* Escala con la pantalla, pero siempre por delante de la mono y con suelo propio.
+     El 6.5vw va un punto y pico por encima del 5.2vw del titular, así la diferencia
+     entre los dos se mantiene pareja —el nombre queda alrededor de un 25% más grande
+     en toda la franja, que es lo que lo hace destacar sin desentonar—, y el mínimo de
+     23px lo frena antes de que se confunda con el resto. */
   .hero-title__name {
+    font-size: clamp(23px, 6.5vw, 27px);
     white-space: nowrap;
-  }
-
-  .hero p {
-    margin-left: 0;
   }
 
   .tab-workspace {
@@ -2265,14 +2421,48 @@ a {
     flex-basis: 15px;
   }
 
-  .skill-item {
-    width: 120px;
+  /* Todos los gestos de la barra están pensados para una fila apretada a la izquierda,
+     con sitio de sobra a los lados: la activa se corre 2px a la izquierda, y las tres
+     sombras —la de la activa en reposo, la de la activa señalada y la de la inactiva
+     señalada— salen hacia la derecha. Repartidas a todo el ancho, la última pestaña
+     queda pegada al canto del panel y todo eso se le sale por el borde: el corrimiento
+     abre una rendija de 2px contra la esquina y las sombras se van fuera de la columna.
+     Acá van en espejo, que es exactamente lo que ya hace la primera pestaña por el otro
+     lado: sube sin correrse, y las tres sombras caen a la izquierda. */
+  .tabs .tab-button:last-child[aria-selected='true'],
+  .tabs .tab-button:last-child[aria-selected='true']:hover,
+  .tabs .tab-button:last-child[aria-selected='true']:focus-visible {
+    transform: translate(0, -2px);
   }
 
-  .project-card.horizontal {
-    grid-template-columns: 1fr;
-    grid-template-rows: 140px auto;
-    height: auto;
+  .tabs .tab-button:last-child[aria-selected='true']::before {
+    box-shadow: -4px 4px 0 var(--accent);
+  }
+
+  .tabs .tab-button:last-child[aria-selected='true']:hover::before,
+  .tabs .tab-button:last-child[aria-selected='true']:focus-visible::before {
+    box-shadow: -6px 4px 0 var(--text);
+  }
+
+  .tabs .tab-button:last-child:not([aria-selected='true']):hover,
+  .tabs .tab-button:last-child:not([aria-selected='true']):focus-visible {
+    box-shadow: -5px 0 0 var(--text);
+    transform: translate(0, 0);
+  }
+
+  /* Repartidas a todo el ancho, la última pestaña queda pegada al borde derecho del
+     panel, y ahí su esquina se topa con el redondeo de arriba: entre las dos quedaba
+     un pico de línea suelto —la marca rara—. Cuadrando esa esquina, la última pestaña
+     cierra a ras contra el panel igual que la primera contra la de la izquierda, que
+     por eso ya venía cuadrada. */
+  .tab-panel {
+    padding: 14px 14px 16px;
+    border-radius: 0 0 12px 12px;
+    /* Sin sombra. En escritorio los 4px de accent despegan el panel de una página con
+       aire de sobra a los lados; acá el panel ya ocupa casi todo el ancho y esos 4px
+       no separan de nada: quedan como un borde de más pegado al canto de la pantalla.
+       El marco solo, que sí sigue leyéndose, alcanza. */
+    box-shadow: none;
   }
 
   /* A un tercio de 288px la captura quedaba en 34px. Apilada recupera tamaño. */
@@ -2287,6 +2477,12 @@ a {
     border-left: 0;
   }
 
+  .project-card.horizontal {
+    grid-template-columns: 1fr;
+    grid-template-rows: 140px auto;
+    height: auto;
+  }
+
   .project-card.media-right .project-card__media,
   .project-card.media-right .project-card__content {
     grid-column: 1;
@@ -2298,10 +2494,6 @@ a {
 
   .project-card.media-right .project-card__content {
     grid-row: 2;
-  }
-
-  .project-card__content {
-    min-height: 130px;
   }
 
   .projects__grid {
@@ -2319,6 +2511,88 @@ a {
     grid-column: 1;
   }
 
+  /* Los globos derivan de un borde al otro de su línea. En una columna angosta el
+     texto ya la ocupa entera y no les queda recorrido; un punto menos les devuelve
+     el hueco por el que moverse. */
+  .contact-intro {
+    font-size: 13px;
+  }
+
+  /* Acá la fila del pie ya no entra: los cuatro chips más el "#" piden 516px y la
+     columna no pasa de 480. Envolviendo sin más, la última quedaba sola en un renglón
+     sin prompt, colgando de la nada. Partida en dos mitades de dos, cada una recupera
+     su "#" y el pie vuelve a leerse como líneas de consola completas. */
+  .social-links {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .social-links__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 7px;
+  }
+
+  .social-links__row:not(:first-child) .social-links__prompt {
+    display: inline;
+  }
+}
+
+/* --- Las skills a dos columnas ----------------------------------------------- */
+@media (max-width: 480px) {
+
+  .skills {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* Tope propio: sin él, las dos celdas se repartirían la caja entera del panel y
+       los arcos, centrados en cada una, se separarían hasta leerse como dos listas
+       sueltas en vez de como una rejilla. */
+    max-width: 340px;
+  }
+
+  /* Nueve fichas en dos columnas dejan huérfana a la última. Ocupando la fila entera
+     queda centrada, que es donde caía con el reparto anterior. */
+  .skills__row:last-child .skill-slot:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* --- Las pestañas al límite -------------------------------------------------- */
+@media (max-width: 380px) {
+
+  .page-shell,
+  .content-column,
+  .footer.content-column {
+    width: calc(100% - 24px);
+  }
+
+  .tab-button {
+    gap: 4px;
+    padding-inline: 5px;
+    font-size: 11px;
+  }
+
+  .tab-button__icon {
+    width: 13px;
+    height: 13px;
+    flex-basis: 13px;
+  }
+
+  /* Los 24px de lado del card se comían la mitad del ancho útil del texto. */
+  .project-card--solo .project-card__content {
+    padding: 18px 16px;
+  }
+
+  /* Las dos columnas de tags son max-content: con 30px entre ellas, "localstorage"
+     y "github pages" juntas ya no entran en el ancho que queda. */
+  .project-card ul {
+    column-gap: 18px;
+  }
+
+  .contact-intro {
+    font-size: 12px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

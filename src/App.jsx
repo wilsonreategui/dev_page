@@ -73,6 +73,13 @@ const socialNetworks = [
   { name: 'instagram', label: '@wilsonreategui', url: 'https://www.instagram.com/wilsonreategui', width: 20 },
 ]
 
+// Repartidas en dos mitades desde acá y no dejadas al flex-wrap: los cuatro chips más el
+// "#" piden 516px, y cuando la columna no da, envolver sin más deja la última suelta en
+// un renglón sin prompt. Partido a propósito, cada mitad se lleva su "#" y los dos
+// renglones se leen como dos líneas de consola. Cuál de las dos formas se ve —una fila o
+// dos— lo decide el css; el reparto vive acá porque el "#" es marcado, no estilo.
+const socialRows = [socialNetworks.slice(0, 2), socialNetworks.slice(2)]
+
 const copy = {
   es: {
     locale: 'es',
@@ -82,8 +89,10 @@ const copy = {
     artLink: 'arte',
     artLinkLabel: 'visitar Wilson Reátegui arte',
     avatarAlt: 'foto de perfil de Wilson Reátegui',
-    greeting: '> hola!',
-    introduction: '> mi nombre es',
+    // El "> " no va en el texto: es el prompt, y en móvil se cae. Lo pone el jsx en su
+    // propio span para que el css pueda quitarlo sin tocar el dato.
+    greeting: 'hola!',
+    introduction: 'mi nombre es',
     introBefore: '# ',
     introHighlight: 'programador senior',
     introAfter: ' que vive en Lima, Perú',
@@ -120,8 +129,8 @@ const copy = {
     artLink: 'arte',
     artLinkLabel: 'visit Wilson Reátegui art',
     avatarAlt: 'profile photo of Wilson Reátegui',
-    greeting: '> hi!',
-    introduction: '> my name is',
+    greeting: 'hi!',
+    introduction: 'my name is',
     introBefore: '# a ',
     introHighlight: 'senior developer',
     introAfter: ' based in Lima, Perú',
@@ -241,54 +250,58 @@ function SocialLinks({ theme, labels }) {
 
   return (
     <nav className="social-links" aria-label={labels.socialLabel}>
-      {/* En flujo y no como ::before: así se alinea por línea base con los chips
-          sin depender de un top calculado a mano. */}
-      <span className="social-links__prompt" aria-hidden="true">#</span>
-      {socialNetworks.map((network) => {
-        // Como máscara y no como <img>: el asset aporta la silueta y el color sale de
-        // currentColor, así el icono se tiñe en el hover igual que el texto.
-        const icon = network.asset ? (
-          <span
-            className="social-links__icon"
-            style={{
-              '--icon-mask': `url("${assetPath(network.asset, theme)}")`,
-              width: `${((network.width * 11) / 20).toFixed(2)}px`,
-            }}
-            aria-hidden="true"
-          />
-        ) : (
-          <InstagramIcon />
-        )
+      {socialRows.map((row, rowIndex) => (
+        <div className="social-links__row" key={rowIndex}>
+          {/* En flujo y no como ::before: así se alinea por línea base con los chips
+              sin depender de un top calculado a mano. */}
+          <span className="social-links__prompt" aria-hidden="true">#</span>
+          {row.map((network) => {
+            // Como máscara y no como <img>: el asset aporta la silueta y el color sale de
+            // currentColor, así el icono se tiñe en el hover igual que el texto.
+            const icon = network.asset ? (
+              <span
+                className="social-links__icon"
+                style={{
+                  '--icon-mask': `url("${assetPath(network.asset, theme)}")`,
+                  width: `${((network.width * 11) / 20).toFixed(2)}px`,
+                }}
+                aria-hidden="true"
+              />
+            ) : (
+              <InstagramIcon />
+            )
 
-        if (network.copy) {
-          return (
-            <button
-              key={network.name}
-              className="social-links__item"
-              type="button"
-              onClick={() => copyToClipboard(network.copy)}
-              aria-label={`${labels.copyEmail}: ${network.label}`}
-            >
-              {icon}
-              <span>{copied ? labels.copied : network.label}</span>
-            </button>
-          )
-        }
+            if (network.copy) {
+              return (
+                <button
+                  key={network.name}
+                  className="social-links__item"
+                  type="button"
+                  onClick={() => copyToClipboard(network.copy)}
+                  aria-label={`${labels.copyEmail}: ${network.label}`}
+                >
+                  {icon}
+                  <span>{copied ? labels.copied : network.label}</span>
+                </button>
+              )
+            }
 
-        return (
-          <a
-            key={network.name}
-            className="social-links__item"
-            href={network.url}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={`${network.name}: ${network.label}`}
-          >
-            {icon}
-            <span>{network.label}</span>
-          </a>
-        )
-      })}
+            return (
+              <a
+                key={network.name}
+                className="social-links__item"
+                href={network.url}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={`${network.name}: ${network.label}`}
+              >
+                {icon}
+                <span>{network.label}</span>
+              </a>
+            )
+          })}
+        </div>
+      ))}
     </nav>
   )
 }
@@ -655,10 +668,24 @@ function App() {
           </aside>
 
           <div className="hero__content">
+            {/* Los dos prompts van en su propio span y aria-hidden: son decorativos —el
+                "> " de una consola—, así que un lector de pantalla no tiene por qué
+                leerlos, y en móvil el css los quita sin que el texto pierda nada.
+                Como string de JS y no como texto de JSX: un ">" suelto dispara
+                react/no-unescaped-entities, igual que en el "# exit" del pie. */}
             <h1 className="hero-title">
-              <span className="hero-title__greeting">{labels.greeting}</span>
+              <span className="hero-title__greeting">
+                <span className="hero-title__prompt" aria-hidden="true">{'> '}</span>
+                {labels.greeting}
+              </span>
               <span className="hero-title__identity">
-                <span className="hero-title__introduction">{labels.introduction}</span>{' '}
+                {/* Dentro del introduction y no al lado: esa es la pieza que baja de
+                    tamaño en móvil, y desde fuera el ">" se quedaba con el cuerpo del
+                    titular y salía más grande que el texto que encabeza. */}
+                <span className="hero-title__introduction">
+                  <span className="hero-title__prompt" aria-hidden="true">{'> '}</span>
+                  {labels.introduction}
+                </span>{' '}
                 <span className="hero-title__name">Wilson Reátegui</span>
               </span>
             </h1>
