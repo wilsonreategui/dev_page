@@ -358,7 +358,7 @@ a {
   --hero-text-top: 40px;
   /* Lo que la foto sube respecto de ese renglón: a ras exacto el círculo se veía
      hundido, porque el "> " no llena el alto de su línea y deja aire arriba. */
-  --hero-photo-lift: 50px;
+  --hero-photo-lift: 6px;
 }
 
 .hero__profile {
@@ -1645,6 +1645,7 @@ a {
      interpolar hacia el desencaje de arriba durante el propio montaje: no hay temporizador
      ni cuadro intermedio que pueda sentirse como delay. */
   @starting-style {
+
     .projects[data-motion-settled='false'] .project-card__media,
     .projects[data-motion-settled='false'] .project-card h3,
     .projects[data-motion-settled='false'] .project-card__summary,
