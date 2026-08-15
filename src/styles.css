@@ -2427,7 +2427,10 @@ a {
   }
 
   .tab-workspace {
-    padding-top: 42px;
+    /* En móvil la separación no debe crecer justo cuando la pantalla se hace más
+       pequeña. Se reduce levemente respecto de escritorio para mantener el bloque de
+       pestañas cerca del hero sin que ambos lleguen a tocarse. */
+    padding-top: 24px;
   }
 
   .tabs {
@@ -2552,7 +2555,9 @@ a {
   .social-links {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    /* Conserva entre las filas de enlaces el mismo ritmo vertical de 14px que
+       usan la despedida y la línea de salida inmediatamente debajo. */
+    gap: 14px;
   }
 
   .social-links__row {
