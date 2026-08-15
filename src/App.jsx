@@ -400,12 +400,6 @@ function AudioPreview({ audio, labels }) {
 function ProjectCard({ project, language, labels }) {
   const host = project.url ? new URL(project.url).hostname : null
 
-  // Sin nada de js para las animaciones, a propósito. Por acá pasaron un restartDrift que
-  // rebobinaba la fase de los bucles, un data-settling que sostenía el montaje hasta el
-  // final y un data-held que soltaba la tarjeta en el primer cuadro; los tres producían
-  // saltos, porque cualquier cosa que mueva una pieza fuera de la interpolación puede
-  // caer en un momento en que se vea. Ahora el gesto entero es css interpolando entre dos
-  // estados, que por definición arranca del valor actual y no puede dar un salto.
   return (
     <article className={`project-card ${project.layout}`}>
       {/* Sin aria-hidden cuando lleva audio: adentro hay un botón, y esconderlo del
@@ -470,6 +464,25 @@ function ProjectCard({ project, language, labels }) {
         </div>
       </div>
     </article>
+  )
+}
+
+function ProjectsPanel({ language, labels }) {
+  const [motionSettled, setMotionSettled] = useState(false)
+
+  // CSS inicia el movimiento en el mismo montaje, sin esperar un segundo render. Este
+  // estado solo cambia la curva una vez terminado el primer gesto; no activa la entrada.
+  useEffect(() => {
+    const settleTimer = window.setTimeout(() => setMotionSettled(true), 2300)
+    return () => window.clearTimeout(settleTimer)
+  }, [])
+
+  return (
+    <div className="projects" data-motion-settled={motionSettled}>
+      {projects.map((project) => (
+        <ProjectCard key={project.name} project={project} language={language} labels={labels} />
+      ))}
+    </div>
   )
 }
 
@@ -699,11 +712,7 @@ function App() {
             )}
 
             {activeTab === 'projects' && (
-              <div className="projects">
-                {projects.map((project) => (
-                  <ProjectCard key={project.name} project={project} language={language} labels={labels} />
-                ))}
-              </div>
+              <ProjectsPanel language={language} labels={labels} />
             )}
 
             {activeTab === 'contact' && (
