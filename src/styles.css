@@ -784,18 +784,33 @@ a {
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
-  /* Altura única: los 343px que mide skills con sus 9 arcos a separación natural.
-     Es a la vez mínimo y máximo, así que las tres pestañas rellenan ese alto y
-     ninguna se estira de más. Si algo no cabe, el panel tiene su scroll.
-     El número es medido y sale de una suma: 2 de borde + 18 y 12 de este padding +
-     10, 297 y 4 de la rejilla de skills. Si se toca cualquiera de esos hay que
-     rehacer la cuenta, o el alto sobrante se le va a repartir a las filas —skills
-     rellena el panel con space-between— y el hueco reaparece entre los arcos. */
-  height: 343px;
+  /* Altura única para las tres pestañas, pero elástica: la fija el alto que sobre en la
+     ventana, entre dos topes medidos. Los tres números son sumas de piezas reales; si se
+     toca cualquiera de esas piezas hay que rehacer la cuenta.
+
+     Suelo 355px — skills entera. Sus 9 arcos a separación natural miden 323 (22, 297 y 4
+     de la rejilla) y encima van 18 y 12 de este padding y 2 de borde. Es el piso porque
+     skills y contacto no tendrían que llegar nunca a tener scroll: el que crece con el
+     tiempo es proyectos, y para eso está el techo.
+
+     Techo 463px — dos tarjetas de proyecto completas. 13 de padding-top —proyectos entra
+     más arriba— + 12 y 12 de la rejilla + 193 + 26 de gap + 193 + 12 de este padding + 2
+     de borde. Los 193 son la tarjeta más alta de las dos, que es lo que miden ambas en
+     inglés, así que el par entero entra en los dos idiomas. De la tercera en adelante ya
+     no se pide más alto: caen debajo y el panel las pasa a su scroll.
+
+     Resta 534px — todo lo que no es el panel. 400 por encima (cabecera, hero y la fila de
+     pestañas, medidos en español, que es el idioma que deja el hero 20px más alto; en
+     inglés sobra ese pelo más) y 134 del pie. Así el panel toma el hueco justo que queda
+     sin empujar la página a scrollear: el máximo llega a partir de una ventana de 997px
+     de alto y el mínimo se toca por debajo de 889px. */
+  height: clamp(355px, calc(100vh - 534px), 463px);
   min-height: 0;
-  /* El padding derecho es menor porque la barra aporta su propio aire: la suma
-     con el canal de 24px deja el mismo ancho de contenido que antes. */
-  padding: 18px 8px 12px 17px;
+  /* Parejo a los dos lados. Antes la derecha iba en 8px para compensar el canal de 24px
+     que la barra tenía reservado siempre; sin ese canal, esos 8px dejaban el contenido
+     descentrado contra el borde derecho. Cuando la barra aparece se toma sus 24px de
+     este mismo hueco, que es lo que hace que el contenido no se descoloque de más. */
+  padding: 18px 17px 12px;
   border: 1px solid var(--panel-border);
   border-radius: 0 12px 12px 12px;
   background: transparent;
@@ -803,7 +818,10 @@ a {
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
+  /* Sin scrollbar-gutter: stable a propósito. Reservaba el canal de la barra en las tres
+     pestañas, hubiera scroll o no, y como skills y contacto ya no desbordan nunca eso era
+     una franja en blanco fija contra el borde derecho. Con el valor por defecto el canal
+     solo se abre cuando el contenido no entra —de la tercera tarjeta en adelante—. */
   outline: none;
 }
 
@@ -907,8 +925,10 @@ a {
   width: 100%;
   max-width: 580px;
   /* padding y no margin: al rellenar el panel, el margen se comería alto del propio
-     bloque y las filas tendrían menos sitio para repartirse. */
-  padding-block: 10px 4px;
+     bloque y las filas tendrían menos sitio para repartirse. Los 22px de arriba van
+     sumados al alto del panel, no descontados del reparto: si no, las tres filas se
+     apretarían para devolver ese aire y los arcos perderían su separación natural. */
+  padding-block: 22px 4px;
   margin: 0 auto;
 }
 
@@ -1191,9 +1211,10 @@ a {
      debajo de la última tarjeta. */
   align-content: start;
   width: 100%;
-  /* Arriba sin aire propio: la primera tarjeta arranca contra el padding del panel, y
-     el gap deja respirar a las siguientes sin que la pila deje de leerse como lista. */
-  padding-block: 0 12px;
+  /* Aire propio arriba además del padding del panel, para que la primera tarjeta no
+     arranque pegada a las pestañas; el gap deja respirar a las siguientes sin que la
+     pila deje de leerse como lista. */
+  padding-block: 12px 12px;
   margin: 0 auto;
 }
 
