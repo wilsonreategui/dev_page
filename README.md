@@ -1,6 +1,12 @@
 # Portafolio de Wilson Reátegui
 
-Implementación en React del diseño **Portafolio** de Figma, con versiones clara y oscura y una composición adaptable a escritorio y móvil.
+Implementación de web personal para Wilson Reátegui, enfocado en sus cualidades profesionales.
+
+## Compilar
+
+```bash
+npm run build
+```
 
 ## Desarrollo
 
@@ -9,19 +15,10 @@ npm install
 npm run dev
 ```
 
-## Compilar
-
-```bash
-npm run build
-```
-
 ## Publicar en GitHub Pages
 
-El sitio se compila y publica automáticamente en
-<https://wilsonreategui.github.io/dev_page/> con cada `push` a `main`.
+Se puede visualizar la página en": <https://dev.wilsonreategui.com/>
 
-En **Settings → Pages → Build and deployment**, la fuente debe permanecer en
-**GitHub Actions**. También se puede ejecutar manualmente desde **Actions → Deploy to
-GitHub Pages → Run workflow**.
 
-Diseño fuente: [Portafolio en Figma](https://www.figma.com/design/venBbnBFlswv5ZtF03YTQn/Portafolio)
+##Diseño fuente
+Portafolio: [Proyecto en Figma](https://www.figma.com/design/venBbnBFlswv5ZtF03YTQn/Portafolio)

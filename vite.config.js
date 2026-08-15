@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  // GitHub Pages publica este repositorio bajo /dev_page/.
-  base: '/dev_page/',
+  // El dominio personalizado publica el sitio desde la raíz.
+  base: '/',
   plugins: [react()],
 })
