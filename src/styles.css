@@ -1584,36 +1584,43 @@ a {
     transform: none;
   }
 
-  /* La deriva, en la capa de fuera. Recorridos distintos y desfases negativos que
-     arrancan a mitad de ciclo, igual que en skills: las cuatro piezas nunca coinciden en
-     el mismo punto del recorrido, que es lo que delataría la animación. Acá sí pueden
-     bajar del reposo, que el recorte de la tarjeta las contiene y no llegan al scroll del
-     panel. */
+  /* La deriva, en la capa de fuera. Cada pieza oscila alrededor de su propio centro:
+     conserva la respiración continua, pero ya no recorre la tarjeta ni se separa
+     visualmente de las demás. Los ritmos distintos evitan que el conjunto se mueva como
+     un bloque rígido. */
   .projects .project-card__shard,
   .projects .project-card__media>* {
-    animation: card-drift-a 32s ease-in-out infinite;
+    transform-origin: center;
+    animation: card-drift-a 7s ease-in-out infinite;
   }
 
   /* > * y no img: el tercio de la tarjeta lleva la foto en un proyecto y el reproductor
      en otro, y los dos son la misma pieza. */
   .projects .project-card__media>* {
     animation-name: card-drift-a;
-    animation-duration: 32s;
+    animation-duration: 7s;
   }
 
   .projects .project-card__shard--title {
     animation-name: card-drift-b;
-    animation-duration: 27s;
+    animation-duration: 6s;
   }
 
   .projects .project-card__shard--summary {
     animation-name: card-drift-c;
-    animation-duration: 37s;
+    animation-duration: 8s;
   }
 
   .projects .project-card__shard--tags {
     animation-name: card-drift-d;
-    animation-duration: 30s;
+    animation-duration: 6.5s;
+  }
+
+  /* Al ensamblar la tarjeta, las piezas dejan también de oscilar y recuperan su eje
+     neutro. Al salir del hover reinician su movimiento local junto con el desencaje. */
+  .project-card:is(:hover, :focus-within) .project-card__shard,
+  .project-card:is(:hover, :focus-within) .project-card__media>* {
+    animation: none;
   }
 
   /* Las ocho piezas se quedan en su propia capa de composición de forma permanente. Sin
@@ -1631,11 +1638,9 @@ a {
 }
 
 /* Los cuatro recorridos de la deriva. Números literales a propósito: ver la nota de
-   arriba, y por eso graduar la deriva se hace acá y no desde una variable.
-   La órbita llega a 3px por eje y un tercio de grado —medido, 3.8px de recorrido real—,
-   del orden de las fichas de skills. En la órbita A, que corresponde a la imagen o al
-   reproductor, solo la rotación es menor para que esos componentes permanezcan más
-   rectos; la distancia recorrida es la original. */
+   arriba, y por eso graduar la deriva se hace acá y no desde una variable. Ya no hay
+   traslación: cada objeto permanece en su sitio y solo gira suavemente sobre su propio
+   eje. La imagen o el reproductor usan el arco más corto para mantenerse más rectos. */
 @keyframes card-drift-a {
 
   0%,
@@ -1644,11 +1649,11 @@ a {
   }
 
   33% {
-    transform: translate3d(3.75px, -3px, 0) rotate(0.16deg);
+    transform: translate3d(0, 0, 0) rotate(0.55deg);
   }
 
   66% {
-    transform: translate3d(-2.25px, 3.75px, 0) rotate(-0.14deg);
+    transform: translate3d(0, 0, 0) rotate(-0.48deg);
   }
 }
 
@@ -1660,11 +1665,11 @@ a {
   }
 
   30% {
-    transform: translate3d(-4.25px, 2.25px, 0) rotate(-0.42deg);
+    transform: translate3d(0, 0, 0) rotate(-1.05deg);
   }
 
   65% {
-    transform: translate3d(3px, -3.75px, 0) rotate(0.39deg);
+    transform: translate3d(0, 0, 0) rotate(0.95deg);
   }
 }
 
@@ -1676,11 +1681,11 @@ a {
   }
 
   40% {
-    transform: translate3d(3px, 3.75px, 0) rotate(0.45deg);
+    transform: translate3d(0, 0, 0) rotate(0.9deg);
   }
 
   75% {
-    transform: translate3d(-3.75px, -2.25px, 0) rotate(-0.32deg);
+    transform: translate3d(0, 0, 0) rotate(-0.78deg);
   }
 }
 
@@ -1692,15 +1697,15 @@ a {
   }
 
   25% {
-    transform: translate3d(-3px, -3.75px, 0) rotate(-0.39deg);
+    transform: translate3d(0, 0, 0) rotate(-0.88deg);
   }
 
   55% {
-    transform: translate3d(3.75px, 1.5px, 0) rotate(0.47deg);
+    transform: translate3d(0, 0, 0) rotate(1.08deg);
   }
 
   80% {
-    transform: translate3d(1.5px, 3.75px, 0) rotate(0.21deg);
+    transform: translate3d(0, 0, 0) rotate(0.46deg);
   }
 }
 
